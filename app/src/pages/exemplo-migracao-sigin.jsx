@@ -1,19 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, use } from 'react'
-
-// Função para carregar os usuários
-function fetchUsers() {
-  return fetch('/users.json')
-    .then(response => response.json())
-    .then(data => data.users)
-    .catch(err => {
-      console.error('Erro ao carregar usuários:', err)
-      return []
-    })
-}
-
-// Cria a promessa para ser utilizada pelo hook use
-const usersPromise = fetchUsers()
+import { useState } from 'react'
+import { login } from '../services/authService'
 
 function SignIn() {
   const [formData, setFormData] = useState({
@@ -21,11 +8,8 @@ function SignIn() {
     password: ''
   })
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  
-  // Usando o hook use para lidar com a promessa de forma declarativa
-  // Isso substitui o useEffect anterior
-  const users = use(usersPromise)
 
   const handleChange = (e) => {
     setFormData({
@@ -34,27 +18,30 @@ function SignIn() {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setIsLoading(true)
     
-    const user = users.find(u => 
-      u.username === formData.username && u.password === formData.password
-    )
-    
-    if (user) {
-      // Salvar informações do usuário no localStorage
+    try {
+      // Usando o service de autenticação
+      const user = await login(formData.username, formData.password)
+      
+      // Salvando informações do usuário (já que o token é gerenciado no authService)
       localStorage.setItem('currentUser', JSON.stringify({
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.username // Usando o username como role por enquanto
+        role: user.role // Agora o backend retornaria a role correta
       }))
       
       // Redirecionar para a página home
       navigate('/home')
-    } else {
-      setError('Usuário ou senha inválidos')
+    } catch (err) {
+      setError('Credenciais inválidas. Por favor tente novamente.')
+      console.error('Erro durante o login:', err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -105,7 +92,8 @@ function SignIn() {
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#008fad] focus:border-transparent"
                 placeholder="Digite sua senha"
                 required
-              />            </div>
+              />
+            </div>
             
             {error && (
               <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-100 text-sm">
@@ -115,9 +103,10 @@ function SignIn() {
             
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-[#008fad] text-white font-medium rounded-lg hover:bg-[#007a94] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#008fad] transition-colors"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-[#008fad] text-white font-medium rounded-lg hover:bg-[#007a94] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#008fad] transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
-              Entrar
+              {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
         </div>

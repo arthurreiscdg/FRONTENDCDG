@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@casadagrafica.com",
+      "password": "admin123"
+    },
+    {
+      "id": 2,
+      "username": "montik",
+      "email": "montik@casadagrafica.com",
+      "password": "montik123"
+    },
+    {
+      "id": 3,
+      "username": "zerohum",
+      "email": "zerohum@casadagrafica.com",
+      "password": "zerohum123"
+    }
+  ]
+}
