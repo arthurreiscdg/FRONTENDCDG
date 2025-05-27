@@ -10,6 +10,7 @@ Este diretório contém a documentação completa do sistema CDG, dividida em m�
 4. [Layout e Navegação](./03-layout-navegacao.md) - Estrutura visual e sistema de navegação
 5. [Notificações e Componentes Auxiliares](./04-notificacoes-componentes-auxiliares.md) - Sistema de feedback e componentes de suporte
 6. [Fluxo do Formulário ZeroHum](./05-fluxo-zerohum.md) - Detalhamento do processo de preenchimento do formulário ZeroHum
+7. [Implementação de Acesso Direto a Formulários](./implementacao-acesso-direto.md) - Detalhamento da implementação de acesso direto aos formulários para usuários institucionais
 
 ## Objetivo da Documentação
 

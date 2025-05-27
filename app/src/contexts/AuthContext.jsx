@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { isAuthenticated, login as authLogin, logout as authLogout, getCurrentUser, hasPermission } from '../services/authService';
+import { isAuthenticated, login as authLogin, logout as authLogout, getCurrentUser, hasPermission, getDirectFormPath } from '../services/authService';
 
 // Criando o contexto de autenticação
 const AuthContext = createContext();
@@ -81,6 +81,14 @@ export function AuthProvider({ children }) {
   const checkPermission = (permission) => {
     return hasPermission(permission);
   };
+    /**
+   * Verifica se o usuário deve ser redirecionado para um formulário específico
+   * @returns {string|null} Caminho para o formulário específico ou null
+   */
+  const getFormPath = () => {
+    if (!user) return null;
+    return user.directFormPath || null;
+  };
   
   // Valores expostos pelo contexto
   const contextValue = {
@@ -89,7 +97,8 @@ export function AuthProvider({ children }) {
     user,
     login,
     logout,
-    hasPermission: checkPermission
+    hasPermission: checkPermission,
+    getDirectFormPath: getFormPath
   };
   
   return (

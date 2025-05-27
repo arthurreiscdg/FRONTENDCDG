@@ -2,6 +2,40 @@
 const AUTH_TOKEN_KEY = 'cdg_auth_token';
 const USER_INFO_KEY = 'cdg_user_info';
 
+// Mapeamento de tipos de usuários para seus formulários específicos
+const USER_FORM_MAPPING = {
+  'zerohum': '/formularios/zerohum',
+  'coleguium': '/formularios/coleguium',
+  'elite': '/formularios/elite',
+  'pensi': '/formularios/pensi'
+};
+
+/**
+ * Determina se um usuário deve ser direcionado para um formulário específico
+ * @param {Object} user Objeto de usuário
+ * @returns {string|null} Caminho para o formulário ou null
+ */
+export function getDirectFormPath(user) {
+  if (!user) return null;
+  
+  // Se o role corresponder a uma instituição conhecida
+  if (user.role && USER_FORM_MAPPING[user.role.toLowerCase()]) {
+    return USER_FORM_MAPPING[user.role.toLowerCase()];
+  }
+  
+  // Se o username corresponder exatamente a uma instituição conhecida (fallback)
+  if (USER_FORM_MAPPING[user.username.toLowerCase()]) {
+    return USER_FORM_MAPPING[user.username.toLowerCase()];
+  }
+  
+  // Se o perfil for admin ou não tiver acesso direto, retorna null
+  if (user.role === 'admin' || user.permissions?.includes('all')) {
+    return null;
+  }
+  
+  return null;
+}
+
 /**
  * Busca usuários do arquivo JSON
  * @returns {Promise<Array>} Array de usuários
@@ -34,8 +68,7 @@ export async function login(username, password) {
     if (!user) {
       return { success: false, message: 'Credenciais inválidas' };
     }
-    
-    // Cria um token (em um app real, isso seria feito pelo servidor)
+      // Cria um token (em um app real, isso seria feito pelo servidor)
     const token = btoa(JSON.stringify({ 
       id: user.id, 
       username: user.username,
@@ -50,7 +83,8 @@ export async function login(username, password) {
         username: user.username,
         email: user.email,
         role: user.role || user.username,
-        permissions: user.permissions || []
+        permissions: user.permissions || [],
+        directFormPath: getDirectFormPath({ ...user }) // Determina o caminho direto usando o role
       }
     };
     
@@ -82,15 +116,15 @@ export function isAuthenticated() {
   const userInfo = localStorage.getItem(USER_INFO_KEY);
   
   if (!token || !userInfo) return false;
-  
-  try {
+    try {
     // Decodifica o token para verificar a expiração
     const tokenData = JSON.parse(atob(token));
     const now = new Date().getTime();
     // Token expira após 8 horas
     const isTokenValid = (now - tokenData.timestamp) < 28800000;
     
-    return isTokenValid;  } catch (e) {
+    return isTokenValid;
+  } catch (e) {
     return false;
   }
 }
@@ -127,9 +161,9 @@ export function getCurrentUser() {
  */
 export function hasPermission(permission) {
   const user = getCurrentUser();
+    if (!user || !user.permissions) return false;
   
-  if (!user || !user.permissions) return false;
-    if (user.role === 'admin' || user.permissions.includes('all')) {
+  if (user.role === 'admin' || user.permissions.includes('all')) {
     return true;
   }
   
@@ -140,11 +174,11 @@ export function hasPermission(permission) {
  * Atualiza dados do usuário a partir da API (implementação temporária)
  * @returns {Promise<Object|null>} Informações atualizadas do usuário
  */
-export async function refreshUserData() {
-  try {
+export async function refreshUserData() {  try {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) return null;
-      // Placeholder para requisição à API
+    
+    // Placeholder para requisição à API
     // Em um app real, você faria uma requisição para o seu backend:
     // const response = await fetch('https://api.casadagrafica.com/auth/me', {
     //   headers: {

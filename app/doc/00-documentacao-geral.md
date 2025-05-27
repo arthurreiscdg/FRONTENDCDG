@@ -92,6 +92,7 @@ O CDG System implementa um controle de acesso baseado em permissões para garant
 
 - **Admin**: Acesso irrestrito a todas as funcionalidades
 - **Usuário padrão**: Acesso baseado em permissões específicas
+- **Usuário institucional**: Acesso direto a seu formulário específico (zerohum, coleguium, elite, pensi)
 
 ### Permissões Implementadas
 
@@ -99,12 +100,22 @@ O CDG System implementa um controle de acesso baseado em permissões para garant
 - `montik`: Acesso ao módulo Montik
 - `all`: Acesso a recursos administrativos (equivalente a admin)
 - `config-montik`: Acesso às configurações do módulo Montik
+- Permissões específicas por instituição: `zerohum`, `coleguium`, `elite`, `pensi`
 
 ### Verificação de Permissões
 
-As permissões são verificadas em dois níveis:
+As permissões são verificadas em três níveis:
 1. **Renderização condicional**: Elementos da interface são exibidos ou ocultados
 2. **Proteção de rotas**: Redirecionamento para Home quando não há permissão
+3. **Redirecionamento automático**: Usuários institucionais são direcionados automaticamente para seus formulários específicos
+
+### Acesso Direto por Tipo de Usuário
+
+O sistema implementa um mecanismo de acesso direto aos formulários para usuários institucionais:
+- Identificação do tipo de usuário via propriedade `role` ou `username`
+- Mapeamento de tipos de usuário para formulários específicos
+- Redirecionamento automático após o login
+- Bypass da tela de seleção de formulários para usuários institucionais
 
 ## Interface do Usuário
 

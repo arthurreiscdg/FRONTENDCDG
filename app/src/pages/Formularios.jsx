@@ -1,6 +1,7 @@
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormCard from '../components/FormCard';
+import { useAuth } from '../contexts/AuthContext';
 
 // Dados dos formulários
 const formularioData = [
@@ -52,9 +53,28 @@ function Formularios() {
   // Usando o novo hook use para obter o usuário atual
   const currentUser = use(userPromise);
   const navigate = useNavigate();
+  const { getDirectFormPath } = useAuth();
   
   const [selectedForm, setSelectedForm] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [availableForms, setAvailableForms] = useState(formularioData);
+
+  // Verificar se o usuário deve ser redirecionado para um formulário específico
+  useEffect(() => {
+    const directFormPath = getDirectFormPath();
+    
+    if (directFormPath) {
+      // Redirecionar para o formulário específico
+      navigate(directFormPath);
+    } else if (currentUser?.role === 'admin' || currentUser?.permissions?.includes('all')) {
+      // Administradores veem todos os formulários
+      setAvailableForms(formularioData);
+    } else {
+      // Verificar se o usuário tem acesso a algum formulário específico
+      // Caso não tenha um acesso direto, mas tenha permissão para ver formulários
+      setAvailableForms(formularioData);
+    }
+  }, [navigate, getDirectFormPath, currentUser]);
 
   const handleSelectForm = (form) => {
     setSelectedForm(form);
@@ -88,7 +108,7 @@ function Formularios() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {formularioData.map((form) => (
+        {availableForms.map((form) => (
           <FormCard
             key={form.id}
             title={form.title}

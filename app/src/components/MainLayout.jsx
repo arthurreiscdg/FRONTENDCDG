@@ -6,13 +6,23 @@ import { useAuth } from '../contexts/AuthContext';
 function MainLayout() {
   const navigate = useNavigate();
   const { authenticated, logout, user } = useAuth();
+  const { getDirectFormPath } = useAuth();
 
   // Redirecionar para login se não estiver autenticado
+  // ou para formulário específico se for um usuário institucional
   useEffect(() => {
     if (!authenticated) {
       navigate('/');
+    } else {
+      // Verificar se o usuário tem acesso direto a um formulário específico
+      const directFormPath = getDirectFormPath();
+      
+      // Se o caminho atual for /home e o usuário tiver um formulário direto, redirecionar
+      if (directFormPath && window.location.pathname === '/home') {
+        navigate(directFormPath);
+      }
     }
-  }, [authenticated, navigate]);
+  }, [authenticated, navigate, getDirectFormPath]);
 
   const handleLogout = () => {
     logout();

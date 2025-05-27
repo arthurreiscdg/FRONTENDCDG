@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
-  const { hasPermission, user } = useAuth();
+  const { hasPermission, user, getDirectFormPath } = useAuth();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -21,9 +21,44 @@ function Sidebar() {
     { path: '/config-montik', name: 'Configurações Montik', icon: '🔧', permission: 'config-montik' },
     { path: '/config-form', name: 'Configurações Form', icon: '🔧', permission: 'all' },
   ];
+    // Verifica se o usuário tem acesso direto a um formulário
+  const directFormPath = getDirectFormPath();
+  
+  // Se o usuário tem acesso direto, adiciona o item de navegação correspondente
+  let finalNavItems = [...allNavItems];
+  
+  if (directFormPath) {
+    // Encontrar qual formulário corresponde ao caminho
+    let formName = '';
+    if (directFormPath.includes('zerohum')) formName = 'ZeroHum';
+    else if (directFormPath.includes('coleguium')) formName = 'Coleguium';
+    else if (directFormPath.includes('elite')) formName = 'Elite';
+    else if (directFormPath.includes('pensi')) formName = 'Pensi';
+    
+    // Adiciona o link direto para o formulário específico
+    finalNavItems.push({
+      path: directFormPath,
+      name: `Formulário ${formName}`,
+      icon: '📄',
+      permission: null // Acessível para este usuário
+    });
+  }
   
   // Filtra os itens de navegação baseado nas permissões do usuário
-  const navItems = allNavItems.filter(item => {
+  const navItems = finalNavItems.filter(item => {
+    // Se o usuário tem acesso direto a um formulário, mostrar apenas Home e link direto para o formulário
+    if (directFormPath) {
+      // Para usuários institucionais, mostrar apenas Home e esconder o item Formulários
+      if (item.path === '/formularios') return false;
+      
+      // Se for a página Home, sempre mostrar
+      if (item.permission === null) return true;
+      
+      // Esconder todos os outros itens
+      return false;
+    }
+    
+    // Para usuários normais, segue a lógica padrão
     // Se não precisar de permissão, todos podem acessar
     if (item.permission === null) return true;
     

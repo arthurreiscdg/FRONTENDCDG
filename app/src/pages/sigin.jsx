@@ -11,13 +11,19 @@ function SignIn() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login, authenticated } = useAuth()
+    // Redirecionar para home ou formulário específico se já estiver autenticado
+  const { getDirectFormPath } = useAuth()
   
-  // Redirecionar para home se já estiver autenticado
   useEffect(() => {
     if (authenticated) {
-      navigate('/home')
+      const directPath = getDirectFormPath()
+      if (directPath) {
+        navigate(directPath)
+      } else {
+        navigate('/home')
+      }
     }
-  }, [authenticated, navigate])
+  }, [authenticated, navigate, getDirectFormPath])
 
   const handleChange = (e) => {
     setFormData({
@@ -32,10 +38,9 @@ function SignIn() {
     
     try {
       const result = await login(formData.username, formData.password)
-      
-      if (result.success) {
-        // Redirecionar para a página home acontecerá automaticamente
-        // devido ao useEffect que monitora o estado de autenticação
+        if (result.success) {
+        // O redirecionamento acontecerá automaticamente pelo useEffect
+        // que monitora o estado de autenticação e direciona para o formulário específico
       } else {
         setError(result.message || 'Usuário ou senha inválidos')
       }

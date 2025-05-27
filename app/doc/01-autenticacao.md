@@ -93,6 +93,21 @@ O sistema implementa um controle de acesso baseado em permissões:
 - O método `hasPermission()` verifica se o usuário tem uma permissão específica
 - O componente `ProtectedRoute` usa essas permissões para controlar o acesso às rotas
 
+## Acesso Direto a Formulários Institucionais
+
+O sistema implementa um mecanismo de redirecionamento automático para usuários institucionais:
+
+- Usuários identificados como pertencentes a instituições específicas (zerohum, coleguium, elite, pensi) são direcionados automaticamente para seus formulários específicos
+- A identificação é feita através da propriedade `role` ou, como fallback, do próprio nome de usuário (`username`)
+- Após o login, o sistema verifica se o usuário possui um formulário específico através da função `getDirectFormPath()`
+- Se um caminho direto for identificado, o usuário é redirecionado automaticamente, sem passar pela tela de seleção de formulários
+- Usuários administrativos continuam tendo acesso a todos os formulários
+
+**Implementação:**
+- Mapeamento de tipos de usuário para formulários específicos em `authService.js`
+- Função `getDirectFormPath()` exposta pelo contexto de autenticação
+- Verificação do caminho direto durante o login e navegação
+
 ## Oportunidades de Melhorias
 
 1. Implementar autenticação com servidor real em vez de usar um arquivo JSON local
@@ -100,3 +115,4 @@ O sistema implementa um controle de acesso baseado em permissões:
 3. Implementar expiração de token e lógica de renovação automática
 4. Aprimorar o mecanismo de RBAC (Controle de Acesso Baseado em Funções)
 5. Adicionar autenticação de dois fatores para maior segurança
+6. Permitir configuração dinâmica de mapeamento de usuários para formulários
