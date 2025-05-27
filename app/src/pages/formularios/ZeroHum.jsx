@@ -74,30 +74,22 @@ function ZeroHum() {
         grampos: formData.grampos,
         nome: formData.nome,
         email: formData.email,
+        origemDados: formData.metodoPedido, // Indicador de origem dos dados
         pdfs: formData.pdfs.map(pdf => ({
           nome: pdf.file.name,
           tamanho: `${(pdf.file.size / 1024 / 1024).toFixed(2)} MB`,
           tipo: pdf.file.type
         }))
-      };
-
-      // Adicionar dados específicos baseado no método de pedido
-      if (formData.metodoPedido === 'manual') {
-        formDataJson.escolasQuantidades = Object.entries(formData.escolasQuantidades)
-          .filter(([_, quantidade]) => quantidade)
-          .reduce((acc, [escola, quantidade]) => {
-            acc[escola] = quantidade;
-            return acc;
-          }, {});
-      } else {
-        formDataJson.arquivoExcel = formData.arquivoExcel ? {
-          nome: formData.arquivoExcel.name,
-          tamanho: `${(formData.arquivoExcel.size / 1024 / 1024).toFixed(2)} MB`,
-          tipo: formData.arquivoExcel.type
-        } : null;
-      }
-
-      // Mostrar no console para debug
+      };      // Adicionar dados de escolas e quantidades (seja manual ou Excel)
+      formDataJson.escolasQuantidades = Object.entries(formData.escolasQuantidades)
+        .filter(([_, quantidade]) => quantidade)
+        .reduce((acc, [escola, quantidade]) => {
+          acc[escola] = quantidade;
+          return acc;
+        }, {});
+      
+      // Não vamos mais incluir informações do arquivo Excel no JSON enviado à API
+      // O método de pedido já está incluído e as quantidades extraídas também// Mostrar no console para debug
       console.log("Dados do formulário (JSON):", formDataJson);
       
       // Simulação de envio FormData (para visualização)
@@ -111,17 +103,15 @@ function ZeroHum() {
         }
       });
       
+      // Garantir que o método seja enviado claramente
+      formDataToSend.append('origemDados', formData.metodoPedido);
+      
       // Adicionar arquivos PDF
       formData.pdfs.forEach((pdf, index) => {
         formDataToSend.append(`pdf_${index}`, pdf.file);
       });
-      
-      // Adicionar dados de escolas/quantidades ou Excel
-      if (formData.metodoPedido === 'manual') {
-        formDataToSend.append('escolasQuantidades', JSON.stringify(formDataJson.escolasQuantidades));
-      } else if (formData.arquivoExcel) {
-        formDataToSend.append('arquivoExcel', formData.arquivoExcel);
-      }
+        // Adicionar dados de escolas/quantidades (independente do método)
+      formDataToSend.append('escolasQuantidades', JSON.stringify(formDataJson.escolasQuantidades));
       
       console.log("FormData (chaves):", [...formDataToSend.keys()]);
 
@@ -236,20 +226,47 @@ function ZeroHum() {
               <h3 className="font-semibold text-white mb-2">Método de envio:</h3>
               <p className="text-gray-300">FormData (multipart/form-data) - necessário para envio de arquivos</p>
             </div>
-            
-            <div className="mb-4">
+              <div className="mb-4">
               <h3 className="font-semibold text-white mb-2">Estrutura dos dados:</h3>
               <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm text-gray-300 max-h-96">
                 {JSON.stringify(apiData, null, 2)}
               </pre>
             </div>
             
-            <div className="mb-6">
+            {/* Seção para mostrar as escolas e quantidades */}
+            {apiData?.escolasQuantidades && Object.keys(apiData.escolasQuantidades).length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-white mb-2">Escolas e Quantidades:</h3>
+                <div className="bg-gray-900 p-4 rounded-lg overflow-x-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {Object.entries(apiData.escolasQuantidades).map(([escola, quantidade]) => (
+                      <div key={escola} className="flex justify-between p-2 border border-gray-700 rounded-md">
+                        <span className="text-gray-300">{escola.replace(/_/g, ' ')}</span>
+                        <span className="text-green-400 font-medium">{quantidade}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-2 border-t border-gray-700 flex justify-between">
+                    <span className="text-white">Total:</span>
+                    <span className="text-green-400 font-bold">
+                      {Object.values(apiData.escolasQuantidades).reduce((a, b) => a + b, 0)} cópias
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}            <div className="mb-6">
               <h3 className="font-semibold text-white mb-2">Observações:</h3>
               <ul className="list-disc text-gray-300 pl-5 space-y-1">
-                <li>Os arquivos (PDFs e Excel) são enviados como arquivos binários no FormData</li>
-                <li>Os dados JSON são convertidos para string quando enviados via FormData</li>
-                <li>No backend, será necessário processar cada tipo de dado adequadamente</li>
+                <li>Os arquivos PDFs são enviados como arquivos binários no FormData</li>
+                <li>As informações das escolas e quantidades são enviadas como JSON (string) no FormData</li>
+                <li>O sistema utiliza o mesmo formato de dados independente do método de entrada (manual ou Excel)</li>
+                {apiData?.metodoPedido === 'excel' && (
+                  <li className="text-green-400">
+                    Os dados foram extraídos de um arquivo Excel e processados no formato padrão
+                  </li>
+                )}
+                <li>Apenas os dados necessários são enviados à API, sem incluir metadados do arquivo Excel</li>
+                <li>No backend, será necessário processar os dados de escolas/quantidades a partir do JSON</li>
               </ul>
             </div>
             

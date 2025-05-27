@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useExcelProcessor } from '../../../hooks/useExcelProcessor';
+import ExcelDataSummary from './ExcelDataSummary';
 
 function EscolasQuantidades({ formData, updateFormData, onNext, onBack }) {
   const [error, setError] = useState('');
@@ -14,32 +16,54 @@ function EscolasQuantidades({ formData, updateFormData, onNext, onBack }) {
     'SAO_JOAO_DE_MERITI', 'VILA_ISABEL', 'VILAR_DOS_TELES'
   ];
   
+  // Usar o hook personalizado para processamento de Excel
+  const { 
+    processando,
+    processarArquivoExcel,
+    isValidExcelFile,
+    setError: setExcelError
+  } = useExcelProcessor();
+  
+  // Processar o arquivo Excel quando ele for carregado
+  useEffect(() => {
+    const processarExcel = async () => {
+      if (formData.arquivoExcel && formData.metodoPedido === 'excel') {
+        const resultado = await processarArquivoExcel(formData.arquivoExcel, escolas);
+        
+        if (resultado.error) {
+          setError(resultado.error);
+        } else {
+          updateFormData('escolasQuantidades', resultado.data);
+          setError('');
+        }
+      }
+    };
+    
+    processarExcel();
+  }, [formData.arquivoExcel, formData.metodoPedido]);
+  
   const handleQuantidadeChange = (escola, quantidade) => {
     updateFormData('escolasQuantidades', {
       ...formData.escolasQuantidades,
       [escola]: quantidade === '' ? '' : parseInt(quantidade, 10)
     });
   };
-  
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const allowedTypes = [
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
-    
-    if (!allowedTypes.includes(file.type)) {
+    if (!isValidExcelFile(file)) {
       setError('Por favor, selecione apenas arquivos Excel (.xls ou .xlsx)');
       return;
     }
     
+    // Limpar quantidades anteriores e configurar o arquivo
     updateFormData('arquivoExcel', file);
+    updateFormData('escolasQuantidades', {});
     setError('');
   };
-  
   const handleContinue = () => {
+    // Verificar o método e validar os dados correspondentes
     if (formData.metodoPedido === 'manual') {
       // Verificar se pelo menos uma escola tem quantidade
       const temQuantidade = Object.values(formData.escolasQuantidades).some(qty => qty && qty > 0);
@@ -54,8 +78,21 @@ function EscolasQuantidades({ formData, updateFormData, onNext, onBack }) {
         setError('Por favor, faça upload da planilha preenchida');
         return;
       }
+      
+      // Verificar se o arquivo foi processado e se há alguma escola com quantidade
+      if (processando) {
+        setError('Aguarde o processamento do arquivo Excel');
+        return;
+      }
+      
+      const temQuantidade = Object.values(formData.escolasQuantidades).some(qty => qty && qty > 0);
+      if (!temQuantidade) {
+        setError('Nenhuma escola válida encontrada na planilha ou todas as quantidades são zero');
+        return;
+      }
     }
     
+    // Tudo ok, prosseguir
     setError('');
     onNext();
   };
@@ -128,26 +165,37 @@ function EscolasQuantidades({ formData, updateFormData, onNext, onBack }) {
                 onChange={handleFileChange}
               />
             </div>
-            
-            {formData.arquivoExcel && (
-              <div className="mt-4 p-3 bg-gray-700 rounded-lg w-full flex items-center justify-between">
-                <div className="flex items-center">
-                  <svg className="w-8 h-8 text-green-500 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11 2.05v3.02a7 7 0 10.001 13.95v3.02C6.075 21.775 2 17.535 2 12.05c0-5.555 4.275-9.828 9-10zM13 2.05c4.725.172 9 4.445 9 10 0 5.485-4.075 9.725-9 10v-3.02a7 7 0 100-13.95V2.05z"/>
-                  </svg>
-                  <span className="font-medium">Arquivo carregado</span>
+              {formData.arquivoExcel && (
+              <div className="mt-4 p-3 bg-gray-700 rounded-lg w-full">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <svg className="w-8 h-8 text-green-500 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M11 2.05v3.02a7 7 0 10.001 13.95v3.02C6.075 21.775 2 17.535 2 12.05c0-5.555 4.275-9.828 9-10zM13 2.05c4.725.172 9 4.445 9 10 0 5.485-4.075 9.725-9 10v-3.02a7 7 0 100-13.95V2.05z"/>
+                    </svg>
+                    <div>
+                      <span className="font-medium">{formData.arquivoExcel.name}</span>
+                      <p className="text-xs text-gray-400">{processando ? 'Processando arquivo...' : 'Arquivo carregado'}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateFormData('arquivoExcel', null);
+                      updateFormData('escolasQuantidades', {});
+                    }}
+                    className="text-gray-400 hover:text-red-500 p-2"
+                    disabled={processando}
+                  >
+                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
                 </div>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateFormData('arquivoExcel', null);
-                  }}
-                  className="text-gray-400 hover:text-red-500 p-2"
-                >
-                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
+                  {/* Componente para mostrar resumo dos dados extraídos */}
+                <ExcelDataSummary 
+                  data={formData.escolasQuantidades} 
+                  isLoading={processando} 
+                />
               </div>
             )}
           </div>

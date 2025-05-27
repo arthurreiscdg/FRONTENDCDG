@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import InfoOrigem from './InfoOrigem';
 
 function DadosContato({ formData, updateFormData, onBack, onSubmit, loading }) {
   const [errors, setErrors] = useState({
@@ -124,8 +125,7 @@ function DadosContato({ formData, updateFormData, onBack, onSubmit, loading }) {
           )}
         </div>
       </div>
-      
-      {/* Resumo do pedido */}
+        {/* Resumo do pedido */}
       <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
         <h3 className="font-medium text-white mb-2">Resumo do Pedido</h3>
         <div className="space-y-2 text-sm">
@@ -145,6 +145,17 @@ function DadosContato({ formData, updateFormData, onBack, onSubmit, loading }) {
             <span className="text-gray-400">Data de Entrega:</span>
             <span className="text-white">{new Date(formData.dataEntrega).toLocaleDateString('pt-BR')}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Escolas:</span>
+            <span className="text-white">{Object.keys(formData.escolasQuantidades).length} unidade(s)</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Total de cópias:</span>
+            <span className="text-white">{Object.values(formData.escolasQuantidades).reduce((a, b) => a + b, 0)}</span>
+          </div>
+          
+          {/* Componente para mostrar a origem dos dados */}
+          <InfoOrigem metodoPedido={formData.metodoPedido} arquivoExcel={formData.arquivoExcel} />
         </div>
       </div>
       
