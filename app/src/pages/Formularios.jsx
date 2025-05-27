@@ -1,4 +1,5 @@
 import { useState, use } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FormCard from '../components/FormCard';
 
 // Dados dos formulários
@@ -50,6 +51,7 @@ const userPromise = Promise.resolve(getUserFromStorage());
 function Formularios() {
   // Usando o novo hook use para obter o usuário atual
   const currentUser = use(userPromise);
+  const navigate = useNavigate();
   
   const [selectedForm, setSelectedForm] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -60,14 +62,13 @@ function Formularios() {
       message: `${form.title} selecionado com sucesso!`,
       type: 'success'
     });
-    
-    // Remove a notificação após 3 segundos
+      // Remove a notificação após 3 segundos
     setTimeout(() => {
       setNotification(null);
     }, 3000);
     
-    // Aqui você pode adicionar lógica adicional, como navegação para o formulário específico
-    // navigate(form.path);
+    // Navegar para a página do formulário selecionado
+    navigate(form.path);
   };
 
   return (

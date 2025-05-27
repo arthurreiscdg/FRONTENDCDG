@@ -1,10 +1,10 @@
-// Authentication service functions
+// Funções do serviço de autenticação
 const AUTH_TOKEN_KEY = 'cdg_auth_token';
 const USER_INFO_KEY = 'cdg_user_info';
 
 /**
- * Fetch users from the JSON file
- * @returns {Promise<Array>} Array of users
+ * Busca usuários do arquivo JSON
+ * @returns {Promise<Array>} Array de usuários
  */
 export async function fetchUsers() {
   try {
@@ -12,16 +12,16 @@ export async function fetchUsers() {
     const data = await response.json();
     return data.users || [];
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Erro ao buscar usuários:', error);
     return [];
   }
 }
 
 /**
- * Authenticate a user with username and password
+ * Autentica um usuário com nome de usuário e senha
  * @param {string} username 
  * @param {string} password 
- * @returns {Promise<Object>} Authentication result
+ * @returns {Promise<Object>} Resultado da autenticação
  */
 export async function login(username, password) {
   try {
@@ -35,14 +35,14 @@ export async function login(username, password) {
       return { success: false, message: 'Credenciais inválidas' };
     }
     
-    // Create a token (in real app, this would be done by the server)
+    // Cria um token (em um app real, isso seria feito pelo servidor)
     const token = btoa(JSON.stringify({ 
       id: user.id, 
       username: user.username,
       timestamp: new Date().getTime()
     }));
     
-    // Store auth data
+    // Armazena dados de autenticação
     const authData = {
       token,
       user: {
@@ -54,7 +54,7 @@ export async function login(username, password) {
       }
     };
     
-    // Save to localStorage
+    // Salva no localStorage
     setAuthData(authData);
     
     return { success: true, ...authData };
@@ -65,16 +65,16 @@ export async function login(username, password) {
 }
 
 /**
- * Log out the current user
+ * Desconecta o usuário atual
  */
 export function logout() {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(USER_INFO_KEY);
-  localStorage.removeItem('currentUser'); // Remove the old key as well
+  localStorage.removeItem('currentUser'); // Remove a chave antiga também
 }
 
 /**
- * Check if user is authenticated
+ * Verifica se o usuário está autenticado
  * @returns {boolean}
  */
 export function isAuthenticated() {
@@ -84,10 +84,10 @@ export function isAuthenticated() {
   if (!token || !userInfo) return false;
   
   try {
-    // Decode token to check expiration
+    // Decodifica o token para verificar a expiração
     const tokenData = JSON.parse(atob(token));
     const now = new Date().getTime();
-    // Token expires after 8 hours
+    // Token expira após 8 horas
     const isTokenValid = (now - tokenData.timestamp) < 28800000;
     
     return isTokenValid;  } catch (e) {
@@ -96,20 +96,20 @@ export function isAuthenticated() {
 }
 
 /**
- * Store authentication data
+ * Armazena dados de autenticação
  * @param {Object} authData 
  */
 export function setAuthData(authData) {
   localStorage.setItem(AUTH_TOKEN_KEY, authData.token);
   localStorage.setItem(USER_INFO_KEY, JSON.stringify(authData.user));
   
-  // Also keep compatibility with the old approach
+  // Mantém também compatibilidade com a abordagem antiga
   localStorage.setItem('currentUser', JSON.stringify(authData.user));
 }
 
 /**
- * Get current user information
- * @returns {Object|null} User information
+ * Obtém informações do usuário atual
+ * @returns {Object|null} Informações do usuário
  */
 export function getCurrentUser() {
   try {
@@ -121,7 +121,7 @@ export function getCurrentUser() {
 }
 
 /**
- * Check if user has a specific permission
+ * Verifica se o usuário possui uma permissão específica
  * @param {string} permission 
  * @returns {boolean}
  */
@@ -137,27 +137,26 @@ export function hasPermission(permission) {
 }
 
 /**
- * Refresh user data from API (placeholder for real implementation)
- * @returns {Promise<Object|null>} Updated user information
+ * Atualiza dados do usuário a partir da API (implementação temporária)
+ * @returns {Promise<Object|null>} Informações atualizadas do usuário
  */
 export async function refreshUserData() {
   try {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) return null;
-    
-    // Placeholder for API request
-    // In a real app, you would make a request to your backend:
+      // Placeholder para requisição à API
+    // Em um app real, você faria uma requisição para o seu backend:
     // const response = await fetch('https://api.casadagrafica.com/auth/me', {
     //   headers: {
     //     'Authorization': `Bearer ${token}`
     //   }
     // });
     
-    // For now, just return the current user
+    // Por enquanto, apenas retorna o usuário atual
     return getCurrentUser();
   } catch (error) {
     console.error('Erro ao obter usuário atual:', error);
-    logout(); // Clear invalid session
+    logout(); // Limpa sessão inválida
     return null;
   }
 }
