@@ -1,1 +1,55 @@
 @import "tailwindcss";
+
+:root {
+  --color-primary: #00b4d8;
+  --color-primary-hover: #0096c7;
+  --color-secondary: #023e8a;
+  --color-text: #e0e0e0;
+  --color-text-muted: #a0a0a0;
+  --color-background: #121212;
+  --color-background-light: #1e1e1e;
+  --color-card: #1a1a1a;
+  --color-card-hover: #222222;
+  --color-border: #333333;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Classes de utilidade personalizadas */
+.bg-app-dark {
+  background-color: var(--color-background);
+}
+
+.bg-app-card {
+  background-color: var(--color-card);
+}
+
+.text-app-primary {
+  color: var(--color-primary);
+}
+
+.border-app-border {
+  border-color: var(--color-border);
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}

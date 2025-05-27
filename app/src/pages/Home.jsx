@@ -1,39 +1,32 @@
-import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 function Home() {
-  const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    const userInfo = localStorage.getItem('currentUser');
-    if (userInfo) {
-      setCurrentUser(JSON.parse(userInfo));
-    }
-  }, []);
-
+  const { user: currentUser, hasPermission } = useAuth();
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Bem-vindo ao CDG System</h1>
-        <p className="text-gray-600">
+      <div className="bg-app-card p-6 rounded-xl shadow-lg border border-app-border">
+        <h1 className="text-3xl font-bold text-app-primary mb-4">Bem-vindo ao CDG System</h1>
+        <p className="text-gray-400">
           Sistema de gerenciamento para Casa da Gráfica
         </p>
       </div>
 
       {currentUser && (
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Informações do Usuário</h2>
+        <div className="bg-app-card p-6 rounded-xl shadow-lg border border-app-border">
+          <h2 className="text-xl font-semibold text-white mb-4">Informações do Usuário</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Nome de Usuário</p>
-              <p className="font-medium">{currentUser.username}</p>
+              <p className="text-sm text-gray-400">Nome de Usuário</p>
+              <p className="font-medium text-white">{currentUser.username}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium">{currentUser.email}</p>
+              <p className="text-sm text-gray-400">Email</p>
+              <p className="font-medium text-white">{currentUser.email}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Perfil</p>
-              <p className="font-medium capitalize">{currentUser.role}</p>
+              <p className="text-sm text-gray-400">Perfil</p>
+              <p className="font-medium capitalize text-app-primary">{currentUser.role}</p>
             </div>
           </div>
         </div>
@@ -65,18 +58,19 @@ function Home() {
 
 function DashboardCard({ title, description, icon, path }) {
   return (
-    <a 
-      href={path} 
-      className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-[#008fad] group"
+    <Link 
+      to={path} 
+      className="bg-app-card p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-app-border hover:border-[var(--color-primary)] group block"
     >
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-[#008fad] transition-colors">{title}</h3>
-          <p className="text-gray-600">{description}</p>
+          <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-[var(--color-primary)] transition-colors">{title}</h3>
+          <p className="text-gray-400 group-hover:text-gray-300 transition-colors">{description}</p>
+        </div>        <div className="text-3xl p-2 rounded-md bg-gray-800 bg-opacity-50 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:bg-opacity-20 transition-all">
+          {icon}
         </div>
-        <span className="text-3xl opacity-80">{icon}</span>
       </div>
-    </a>
+    </Link>
   );
 }
 

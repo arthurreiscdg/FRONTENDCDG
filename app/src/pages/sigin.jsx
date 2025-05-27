@@ -1,19 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, use } from 'react'
-
-// Função para carregar os usuários
-function fetchUsers() {
-  return fetch('/users.json')
-    .then(response => response.json())
-    .then(data => data.users)
-    .catch(err => {
-      console.error('Erro ao carregar usuários:', err)
-      return []
-    })
-}
-
-// Cria a promessa para ser utilizada pelo hook use
-const usersPromise = fetchUsers()
+import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 function SignIn() {
   const [formData, setFormData] = useState({
@@ -21,11 +8,16 @@ function SignIn() {
     password: ''
   })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login, authenticated } = useAuth()
   
-  // Usando o hook use para lidar com a promessa de forma declarativa
-  // Isso substitui o useEffect anterior
-  const users = use(usersPromise)
+  // Redirecionar para home se já estiver autenticado
+  useEffect(() => {
+    if (authenticated) {
+      navigate('/home')
+    }
+  }, [authenticated, navigate])
 
   const handleChange = (e) => {
     setFormData({
@@ -33,42 +25,40 @@ function SignIn() {
       [e.target.name]: e.target.value
     })
   }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
     
-    const user = users.find(u => 
-      u.username === formData.username && u.password === formData.password
-    )
-    
-    if (user) {
-      // Salvar informações do usuário no localStorage
-      localStorage.setItem('currentUser', JSON.stringify({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.username // Usando o username como role por enquanto
-      }))
+    try {
+      const result = await login(formData.username, formData.password)
       
-      // Redirecionar para a página home
-      navigate('/home')
-    } else {
-      setError('Usuário ou senha inválidos')
+      if (result.success) {
+        // Redirecionar para a página home acontecerá automaticamente
+        // devido ao useEffect que monitora o estado de autenticação
+      } else {
+        setError(result.message || 'Usuário ou senha inválidos')
+      }
+    } catch (err) {
+      console.error('Erro ao fazer login:', err)
+      setError('Ocorreu um erro ao tentar fazer login')
+    } finally {
+      setLoading(false)
     }
   }
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-app-dark flex items-center justify-center p-4">
       <div className="max-w-md w-full mx-auto">
-        <div className="bg-gray-900 rounded-2xl p-8 shadow-2xl border border-gray-800">
+        <div className="bg-app-card rounded-2xl p-8 shadow-2xl border border-app-border">
           <div className="flex flex-col items-center mb-6">
-            <img 
-              src="/cdg_logo.svg" 
-              alt="CDG Logo" 
-              className="h-24 mb-4"
-            />
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <div className="h-24 mb-4 flex items-center justify-center">
+              <img 
+                src="/cdg_logo.svg" 
+                alt="CDG Logo" 
+                className="h-full filter drop-shadow-lg"
+              />
+            </div>
+            <h1 className="text-4xl font-bold text-app-primary mb-2">
               CDG SYSTEM
             </h1>
             <p className="text-gray-400 mb-6">
@@ -80,14 +70,13 @@ function SignIn() {
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
                 Usuário
-              </label>              
-              <input
+              </label>                <input
                 type="text"
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#008fad] focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                 placeholder="Digite seu nome de usuário"
                 required
               />
@@ -102,22 +91,29 @@ function SignIn() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#008fad] focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                 placeholder="Digite sua senha"
                 required
-              />            </div>
+              /></div>
             
             {error && (
               <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-100 text-sm">
                 {error}
               </div>
-            )}
-            
-            <button
+            )}            <button
               type="submit"
-              className="w-full py-3 px-4 bg-[#008fad] text-white font-medium rounded-lg hover:bg-[#007a94] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#008fad] transition-colors"
+              disabled={loading}
+              className={`w-full py-3 px-4 bg-[var(--color-primary)] text-white font-medium rounded-lg 
+                ${!loading && 'hover:bg-[var(--color-primary-hover)]'} 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)] 
+                transition-colors ${loading && 'opacity-70 cursor-not-allowed'}`}
             >
-              Entrar
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                  Entrando...
+                </div>
+              ) : 'Entrar'}
             </button>
           </form>
         </div>

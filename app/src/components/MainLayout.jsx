@@ -1,42 +1,47 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Sidebar from './Sidebar';
+import { useAuth } from '../contexts/AuthContext';
 
 function MainLayout() {
   const navigate = useNavigate();
+  const { authenticated, logout, user } = useAuth();
 
+  // Redirecionar para login se não estiver autenticado
   useEffect(() => {
-    // Verificar se o usuário está logado
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) {
+    if (!authenticated) {
       navigate('/');
     }
-  }, [navigate]);
+  }, [authenticated, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate('/');
+    logout();
+    // O redirecionamento acontecerá automaticamente pelo efeito acima
   };
-
   return (
-    <div className="flex h-screen bg-black">
+    <div className="flex h-screen bg-app-dark">
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <header className="bg-gray-900 text-white p-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">CDG System</h1>
+      <div className="flex flex-col flex-1 overflow-hidden">        <header className="bg-app-card text-white p-4 flex items-center justify-between border-b border-app-border">
+          <h1 className="text-2xl font-bold text-app-primary">CDG System</h1>
           <div className="flex items-center space-x-4">
-            <span className="text-gray-300">
-              {JSON.parse(localStorage.getItem('currentUser') || '{}').username || 'Usuário'}
-            </span>
+            {user && (
+              <div className="flex items-center">
+                <div className="bg-app-dark p-1 rounded-md border border-app-border mr-2">
+                  <span className="text-xs text-gray-400">Perfil:</span>
+                  <span className="ml-1 text-sm font-medium text-app-primary capitalize">{user.role}</span>
+                </div>
+                <span className="text-gray-300 font-medium">{user.username}</span>
+              </div>
+            )}
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+              className="px-4 py-2 rounded-lg bg-red-900 hover:bg-red-800 text-white transition-colors"
             >
               Sair
             </button>
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-y-auto bg-gray-100">
+        <main className="flex-1 p-6 overflow-y-auto bg-app-dark">
           <Outlet />
         </main>
       </div>

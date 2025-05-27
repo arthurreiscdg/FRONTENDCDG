@@ -4,19 +4,25 @@
       "id": 1,
       "username": "admin",
       "email": "admin@casadagrafica.com",
-      "password": "admin123"
+      "password": "admin123",
+      "role": "admin",
+      "permissions": ["all"]
     },
     {
       "id": 2,
       "username": "montik",
       "email": "montik@casadagrafica.com",
-      "password": "montik123"
+      "password": "montik123",
+      "role": "montik",
+      "permissions": ["formularios", "montik", "config-montik"]
     },
     {
       "id": 3,
       "username": "zerohum",
       "email": "zerohum@casadagrafica.com",
-      "password": "zerohum123"
+      "password": "zerohum123",
+      "role": "zerohum",
+      "permissions": ["formularios", "zerohum"]
     }
   ]
 }
