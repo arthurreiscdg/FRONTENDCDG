@@ -1,3 +1,6 @@
+// Configuração da API
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 // Funções do serviço de autenticação
 const AUTH_TOKEN_KEY = 'cdg_auth_token';
 const USER_INFO_KEY = 'cdg_user_info';
@@ -24,12 +27,12 @@ export function getDirectFormPath(user) {
   }
   
   // Se o username corresponder exatamente a uma instituição conhecida (fallback)
-  if (USER_FORM_MAPPING[user.username.toLowerCase()]) {
+  if (user.username && USER_FORM_MAPPING[user.username.toLowerCase()]) {
     return USER_FORM_MAPPING[user.username.toLowerCase()];
   }
   
   // Se o perfil for admin ou não tiver acesso direto, retorna null
-  if (user.role === 'admin' || user.permissions?.includes('all')) {
+  if (user.role === 'admin' || user.is_admin) {
     return null;
   }
   
@@ -37,74 +40,184 @@ export function getDirectFormPath(user) {
 }
 
 /**
- * Busca usuários do arquivo JSON
- * @returns {Promise<Array>} Array de usuários
+ * Realiza login no backend
+ * @param {string} username Username ou email
+ * @param {string} password Senha
+ * @returns {Promise<Object>} Dados do usuário e token
  */
-export async function fetchUsers() {
-  try {
-    const response = await fetch('/users.json');
+export async function login(username, password) {
+  try {    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // IMPORTANTE: Para enviar/receber cookies
+      body: JSON.stringify({ username, password }),
+    });
+
     const data = await response.json();
-    return data.users || [];
+
+    if (!response.ok) {
+      throw new Error(data.mensagem || 'Erro no login');
+    }
+
+    if (data.success && data.token && data.usuario) {
+      // Adapta os dados do usuário para o formato esperado pelo frontend
+      const adaptedUser = {
+        id: data.usuario.id,
+        nome: data.usuario.nome,
+        username: data.usuario.username,
+        email: data.usuario.email,
+        role: data.usuario.role,
+        is_admin: data.usuario.is_admin,
+        roles: data.usuario.roles || [],
+        escola_id: data.usuario.escola_id,
+        permissions: generatePermissions(data.usuario),
+        directFormPath: getDirectFormPath(data.usuario)
+      };      // Salva apenas dados do usuário no localStorage (token fica no cookie HTTPOnly)
+      localStorage.setItem(USER_INFO_KEY, JSON.stringify(adaptedUser));
+      
+      return {
+        success: true,
+        user: adaptedUser,
+        token: data.token
+      };
+    }
+
+    throw new Error('Resposta inválida do servidor');
   } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
-    return [];
+    console.error('Erro no login:', error);
+    return { success: false, message: error.message };
   }
 }
 
 /**
- * Autentica um usuário com nome de usuário e senha
- * @param {string} username 
- * @param {string} password 
- * @returns {Promise<Object>} Resultado da autenticação
+ * Verifica se o token é válido no backend
+ * @returns {Promise<Object|null>} Dados do usuário ou null
  */
-export async function login(username, password) {
+export async function verifyToken() {
   try {
-    const users = await fetchUsers();
-    
-    const user = users.find(u => 
-      u.username === username && u.password === password
-    );
-    
-    if (!user) {
-      return { success: false, message: 'Credenciais inválidas' };
+    const response = await fetch(`${API_BASE_URL}/auth/verificar`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // IMPORTANTE: Para enviar cookies automaticamente
+    });
+
+    if (!response.ok) {
+      // Token inválido, limpa o armazenamento
+      clearAuthData();
+      return null;
     }
-      // Cria um token (em um app real, isso seria feito pelo servidor)
-    const token = btoa(JSON.stringify({ 
-      id: user.id, 
-      username: user.username,
-      timestamp: new Date().getTime()
-    }));
+
+    const data = await response.json();
     
-    // Armazena dados de autenticação
-    const authData = {
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role || user.username,
-        permissions: user.permissions || [],
-        directFormPath: getDirectFormPath({ ...user }) // Determina o caminho direto usando o role
-      }
-    };
-    
-    // Salva no localStorage
-    setAuthData(authData);
-    
-    return { success: true, ...authData };
+    if (data.success && data.usuario) {
+      // Adapta os dados do usuário para o formato esperado pelo frontend
+      const adaptedUser = {
+        id: data.usuario.id,
+        nome: data.usuario.nome,
+        username: data.usuario.username,
+        email: data.usuario.email,
+        role: data.usuario.role,
+        is_admin: data.usuario.is_admin,
+        roles: data.usuario.roles || [],
+        escola_id: data.usuario.escola_id,
+        permissions: generatePermissions(data.usuario),
+        directFormPath: getDirectFormPath(data.usuario)
+      };
+
+      // Atualiza os dados do usuário no localStorage
+      localStorage.setItem(USER_INFO_KEY, JSON.stringify(adaptedUser));
+      return adaptedUser;
+    }
+
+    return null;
   } catch (error) {
-    console.error('Erro durante o login:', error);
-    return { success: false, message: 'Erro ao realizar login' };
+    console.error('Erro na verificação do token:', error);
+    clearAuthData();
+    return null;
   }
+}
+
+/**
+ * Gera permissões baseadas no tipo de usuário
+ * @param {Object} usuario Dados do usuário do backend
+ * @returns {Array} Array de permissões
+ */
+function generatePermissions(usuario) {
+  const permissions = [];
+  
+  if (usuario.is_admin) {
+    permissions.push('all');
+    return permissions;
+  }
+  
+  // Adiciona permissões baseadas nos roles
+  if (usuario.roles && usuario.roles.length > 0) {
+    permissions.push('formularios');
+    usuario.roles.forEach(role => {
+      permissions.push(role);
+    });
+  }
+  
+  return permissions;
+}
+
+/**
+ * Limpa os dados de autenticação
+ */
+export function clearAuthData() {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(USER_INFO_KEY);
+  localStorage.removeItem('currentUser'); // Remove a chave antiga também
 }
 
 /**
  * Desconecta o usuário atual
  */
-export function logout() {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(USER_INFO_KEY);
-  localStorage.removeItem('currentUser'); // Remove a chave antiga também
+export async function logout() {
+  try {
+    // Chama o endpoint de logout no backend para limpar o cookie
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // IMPORTANTE: Para enviar cookies
+    });
+  } catch (error) {
+    console.error('Erro ao fazer logout no backend:', error);
+  } finally {
+    // Sempre limpa os dados locais, independente do resultado da API
+    clearAuthData();
+  }
+}
+
+/**
+ * Obtém o token armazenado
+ * @returns {string|null} Token ou null
+ */
+export function getStoredToken() {
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+/**
+ * Obtém os dados do usuário armazenados
+ * @returns {Object|null} Dados do usuário ou null
+ */
+export function getStoredUser() {
+  const userData = localStorage.getItem(USER_INFO_KEY);
+  return userData ? JSON.parse(userData) : null;
+}
+
+/**
+ * Obtém informações do usuário atual (alias para getStoredUser)
+ * @returns {Object|null} Informações do usuário
+ */
+export function getCurrentUser() {
+  return getStoredUser();
 }
 
 /**
@@ -112,46 +225,10 @@ export function logout() {
  * @returns {boolean}
  */
 export function isAuthenticated() {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  const userInfo = localStorage.getItem(USER_INFO_KEY);
+  // Agora verifica apenas se há dados do usuário (token está no cookie HTTPOnly)
+  const userInfo = getStoredUser();
   
-  if (!token || !userInfo) return false;
-    try {
-    // Decodifica o token para verificar a expiração
-    const tokenData = JSON.parse(atob(token));
-    const now = new Date().getTime();
-    // Token expira após 8 horas
-    const isTokenValid = (now - tokenData.timestamp) < 28800000;
-    
-    return isTokenValid;
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
- * Armazena dados de autenticação
- * @param {Object} authData 
- */
-export function setAuthData(authData) {
-  localStorage.setItem(AUTH_TOKEN_KEY, authData.token);
-  localStorage.setItem(USER_INFO_KEY, JSON.stringify(authData.user));
-  
-  // Mantém também compatibilidade com a abordagem antiga
-  localStorage.setItem('currentUser', JSON.stringify(authData.user));
-}
-
-/**
- * Obtém informações do usuário atual
- * @returns {Object|null} Informações do usuário
- */
-export function getCurrentUser() {
-  try {
-    const userInfo = localStorage.getItem(USER_INFO_KEY);
-    return userInfo ? JSON.parse(userInfo) : null;
-  } catch (e) {
-    return null;
-  }
+  return !!userInfo;
 }
 
 /**
@@ -161,9 +238,9 @@ export function getCurrentUser() {
  */
 export function hasPermission(permission) {
   const user = getCurrentUser();
-    if (!user || !user.permissions) return false;
+  if (!user || !user.permissions) return false;
   
-  if (user.role === 'admin' || user.permissions.includes('all')) {
+  if (user.is_admin || user.permissions.includes('all')) {
     return true;
   }
   
@@ -171,26 +248,9 @@ export function hasPermission(permission) {
 }
 
 /**
- * Atualiza dados do usuário a partir da API (implementação temporária)
+ * Atualiza dados do usuário a partir da API
  * @returns {Promise<Object|null>} Informações atualizadas do usuário
  */
-export async function refreshUserData() {  try {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) return null;
-    
-    // Placeholder para requisição à API
-    // Em um app real, você faria uma requisição para o seu backend:
-    // const response = await fetch('https://api.casadagrafica.com/auth/me', {
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`
-    //   }
-    // });
-    
-    // Por enquanto, apenas retorna o usuário atual
-    return getCurrentUser();
-  } catch (error) {
-    console.error('Erro ao obter usuário atual:', error);
-    logout(); // Limpa sessão inválida
-    return null;
-  }
+export async function refreshUserData() {
+  return await verifyToken();
 }

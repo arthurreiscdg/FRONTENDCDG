@@ -1,5 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { isAuthenticated, login as authLogin, logout as authLogout, getCurrentUser, hasPermission, getDirectFormPath } from '../services/authService';
+import { 
+  isAuthenticated, 
+  login as authLogin, 
+  logout as authLogout, 
+  getCurrentUser, 
+  hasPermission, 
+  getDirectFormPath,
+  verifyToken 
+} from '../services/authService';
 
 // Criando o contexto de autenticação
 const AuthContext = createContext();
@@ -11,20 +19,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
-
   // Verifica a autenticação ao iniciar
   useEffect(() => {
-    const checkAuth = () => {
-      const isAuth = isAuthenticated();
-      setAuthenticated(isAuth);
-      
-      if (isAuth) {
-        setUser(getCurrentUser());
-      } else {
+    const checkAuth = async () => {
+      try {
+        setLoading(true);
+        
+        // Primeiro verifica se há dados locais
+        const isAuth = isAuthenticated();
+        if (!isAuth) {
+          setAuthenticated(false);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Verifica se o token é válido no backend
+        const userData = await verifyToken();
+        if (userData) {
+          setAuthenticated(true);
+          setUser(userData);
+        } else {
+          setAuthenticated(false);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Erro na verificação de autenticação:', error);
+        setAuthenticated(false);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     checkAuth();
@@ -63,12 +88,11 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }
   };
-  
-  /**
+    /**
    * Função de logout
    */
-  const logout = () => {
-    authLogout();
+  const logout = async () => {
+    await authLogout();
     setAuthenticated(false);
     setUser(null);
   };
