@@ -1,21 +1,38 @@
 import { useState } from 'react';
+import { validarDataEntrega, calcularDataMinimaEntregaUtil, obterDatasSugeridas } from '../../../utils/dateValidation';
 
 function InformacoesTrabalhho({ formData, updateFormData, onNext, onBack }) {
   const [errors, setErrors] = useState({
     titulo: '',
     dataEntrega: ''
   });
-  
   const handleInputChange = (field, value) => {
     updateFormData(field, value);
     
     // Limpar erro quando o campo for preenchido
-    if (value.trim() !== '') {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+    if (field === 'dataEntrega') {
+      // Para campo de data, verificar se tem valor
+      if (value) {
+        setErrors(prev => ({ ...prev, [field]: '' }));
+      }
+    } else {
+      // Para outros campos, usar trim()
+      if (value.trim() !== '') {
+        setErrors(prev => ({ ...prev, [field]: '' }));
+      }
+    }
+    
+    // Validação específica para data de entrega
+    if (field === 'dataEntrega' && value) {
+      const validacao = validarDataEntrega(value);
+      if (!validacao.isValid) {
+        setErrors(prev => ({ ...prev, dataEntrega: validacao.message }));
+      } else {
+        setErrors(prev => ({ ...prev, dataEntrega: '' }));
+      }
     }
   };
-  
-  const validateForm = () => {
+    const validateForm = () => {
     const newErrors = {
       titulo: '',
       dataEntrega: ''
@@ -30,6 +47,13 @@ function InformacoesTrabalhho({ formData, updateFormData, onNext, onBack }) {
     if (!formData.dataEntrega) {
       newErrors.dataEntrega = 'A data de entrega é obrigatória';
       isValid = false;
+    } else {
+      // Validação detalhada da data de entrega
+      const validacao = validarDataEntrega(formData.dataEntrega);
+      if (!validacao.isValid) {
+        newErrors.dataEntrega = validacao.message;
+        isValid = false;
+      }
     }
     
     setErrors(newErrors);
@@ -41,9 +65,10 @@ function InformacoesTrabalhho({ formData, updateFormData, onNext, onBack }) {
       onNext();
     }
   };
-  
-  // Calcular a data mínima (hoje)
-  const today = new Date().toISOString().split('T')[0];
+  // Calcular a data mínima (7 dias após hoje, considerando apenas dias úteis)
+  const dataMinima = calcularDataMinimaEntregaUtil();
+  const datasSugeridas = obterDatasSugeridas();
+  const proximaDataValida = datasSugeridas[0]; // Primeira data válida da lista
   
   return (
     <div className="space-y-6">
@@ -71,25 +96,40 @@ function InformacoesTrabalhho({ formData, updateFormData, onNext, onBack }) {
           {errors.titulo && (
             <p className="mt-1 text-sm text-red-500">{errors.titulo}</p>
           )}
-        </div>
-        
-        {/* Data de Entrega */}
+        </div>        {/* Data de Entrega */}
         <div>
           <label htmlFor="dataEntrega" className="block text-sm font-medium text-gray-300 mb-1">
             Data de Entrega na Escola *
           </label>
+          <p className="text-xs text-gray-400 mb-2">
+            Prazo mínimo: 7 dias úteis. Não aceitamos entregas em feriados ou fins de semana.
+            <br />
+            <span className="text-green-400">
+              Próxima data disponível: {proximaDataValida?.label}
+            </span>
+          </p>
           <input
             type="date"
             id="dataEntrega"
             value={formData.dataEntrega}
             onChange={(e) => handleInputChange('dataEntrega', e.target.value)}
-            min={today}
+            min={dataMinima}
             className={`w-full px-4 py-2 bg-gray-800 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${
               errors.dataEntrega ? 'border-red-500' : 'border-gray-700'
             }`}
           />
           {errors.dataEntrega && (
             <p className="mt-1 text-sm text-red-500">{errors.dataEntrega}</p>
+          )}
+          {/* Botão para aplicar a próxima data válida */}
+          {proximaDataValida && (
+            <button
+              type="button"
+              onClick={() => handleInputChange('dataEntrega', proximaDataValida.date)}
+              className="mt-2 text-xs text-blue-400 hover:text-blue-300 underline"
+            >
+              Usar próxima data disponível ({proximaDataValida.label})
+            </button>
           )}
         </div>
         

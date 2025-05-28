@@ -1,6 +1,9 @@
 // Configuração da API
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+// Importar validação de arquivos
+import { validateFilesForUpload } from '../utils/fileValidation';
+
 /**
  * Serviço para operações relacionadas a formulários
  */
@@ -42,13 +45,20 @@ function validateFormData(formData) {
 
   if (!formData.titulo?.trim()) {
     errors.push('Título do trabalho é obrigatório');
-  }
-
-  if (!formData.dataEntrega) {
+  }  if (!formData.dataEntrega) {
     errors.push('Data de entrega é obrigatória');
   }  // Validação de PDFs
   if (!formData.pdfs || !Array.isArray(formData.pdfs) || formData.pdfs.length === 0) {
     errors.push('Pelo menos um arquivo PDF é obrigatório');
+  } else {
+    // Validar tamanho dos arquivos PDF usando a nova validação
+    const files = formData.pdfs.map(pdf => pdf.file).filter(file => file);
+    if (files.length > 0) {
+      const fileSizeValidation = validateFilesForUpload(files);
+      if (!fileSizeValidation.isValid) {
+        errors.push(fileSizeValidation.message);
+      }
+    }
   }
 
   // Validação de escolas/quantidades
@@ -78,15 +88,27 @@ function validateFormData(formData) {
  * @param {Array} pdfFiles - Array de arquivos PDF (File objects)
  * @returns {Promise<Object>} Dados preparados para o backend
  */
-async function prepareFormDataForSubmission(formData, pdfFiles = []) {
-  try {
+async function prepareFormDataForSubmission(formData, pdfFiles = []) {  try {
     console.log('Preparando dados - pdfFiles recebidos:', pdfFiles);
+    
+    // Validar tamanho dos arquivos antes de converter
+    const files = pdfFiles.map(pdf => pdf.file).filter(file => file);
+    const fileSizeValidation = validateFilesForUpload(files);
+    if (!fileSizeValidation.isValid) {
+      throw new Error(fileSizeValidation.message);
+    }
+    
+    console.log(`Tamanho total dos arquivos: ${(fileSizeValidation.totalSize / 1024 / 1024).toFixed(2)}MB`);
     
     // Converter PDFs para base64
     const pdfsWithBase64 = await Promise.all(
-      pdfFiles.map(async (pdfFile) => {
-        console.log('Processando PDF:', pdfFile);
-        const base64 = await fileToBase64(pdfFile.file);        return {
+      pdfFiles.map(async (pdfFile, index) => {
+        console.log(`Processando PDF ${index + 1}/${pdfFiles.length}:`, pdfFile.nome || pdfFile.name);
+        const base64 = await fileToBase64(pdfFile.file);        
+        const fileSizeMB = (pdfFile.file.size / 1024 / 1024).toFixed(2);
+        console.log(`PDF processado: ${fileSizeMB}MB`);
+        
+        return {
           nome: pdfFile.nome || pdfFile.name, // Suportar ambas as estruturas
           tamanho: pdfFile.tamanho || pdfFile.size, // Manter em bytes
           tipo: pdfFile.tipo || pdfFile.file.type,
@@ -95,7 +117,7 @@ async function prepareFormDataForSubmission(formData, pdfFiles = []) {
       })
     );
 
-    console.log('PDFs convertidos para base64:', pdfsWithBase64.length);
+    console.log('Todos os PDFs convertidos para base64:', pdfsWithBase64.length);
 
     // Estrutura final para o backend
     const preparedData = {
