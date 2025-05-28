@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { submitFormulario } from '../../services/formularioService';
+import useFormLoading from '../../hooks/useFormLoading';
+import LoadingOverlay from '../../components/common/LoadingOverlay';
 import ProgressBar from '../../components/formularios/ProgressBar';
 import MetodoPedido from '../../components/formularios/zerohum/MetodoPedido';
 import UploadPDF from '../../components/formularios/zerohum/UploadPDF';
@@ -15,9 +18,19 @@ function ZeroHum() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [notification, setNotification] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [showDataModal, setShowDataModal] = useState(false);
-  const [apiData, setApiData] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState(null);
+    // Hook personalizado para loading
+  const {
+    isLoading,
+    loadingMessage,
+    loadingSubmessage,
+    progress,
+    showProgress,
+    updateProgress,
+    updateMessage,
+    withProgressLoading
+  } = useFormLoading();
   const [formData, setFormData] = useState({
     metodoPedido: '',  // 'manual' ou 'excel'
     pdfs: [],
@@ -59,10 +72,12 @@ function ZeroHum() {
     }));
   };  const handleSubmit = async () => {
     try {
-      setLoading(true);
+      // Debug: verificar estado dos PDFs
+      console.log('Estado dos PDFs no formulário:', formData.pdfs);
+      console.log('Quantidade de PDFs:', formData.pdfs?.length || 0);
 
-      // Preparar os dados para visualização
-      const formDataJson = {
+      // Preparar dados para envio
+      const formDataToSubmit = {
         metodoPedido: formData.metodoPedido,
         titulo: formData.titulo,
         dataEntrega: formData.dataEntrega,
@@ -74,64 +89,56 @@ function ZeroHum() {
         grampos: formData.grampos,
         nome: formData.nome,
         email: formData.email,
-        origemDados: formData.metodoPedido, // Indicador de origem dos dados
-        pdfs: formData.pdfs.map(pdf => ({
-          nome: pdf.file.name,
-          tamanho: `${(pdf.file.size / 1024 / 1024).toFixed(2)} MB`,
-          tipo: pdf.file.type
-        }))
-      };      // Adicionar dados de escolas e quantidades (seja manual ou Excel)
-      formDataJson.escolasQuantidades = Object.entries(formData.escolasQuantidades)
-        .filter(([_, quantidade]) => quantidade)
-        .reduce((acc, [escola, quantidade]) => {
-          acc[escola] = quantidade;
-          return acc;
-        }, {});
-      
-      // Não vamos mais incluir informações do arquivo Excel no JSON enviado à API
-      // O método de pedido já está incluído e as quantidades extraídas também// Mostrar no console para debug
-      console.log("Dados do formulário (JSON):", formDataJson);
-      
-      // Simulação de envio FormData (para visualização)
-      const formDataToSend = new FormData();
-      
-      // Adicionar dados básicos
-      Object.entries(formDataJson).forEach(([key, value]) => {
-        // Não adicionar objetos complexos diretamente ao FormData
-        if (typeof value !== 'object') {
-          formDataToSend.append(key, value);
-        }
-      });
-      
-      // Garantir que o método seja enviado claramente
-      formDataToSend.append('origemDados', formData.metodoPedido);
-      
-      // Adicionar arquivos PDF
-      formData.pdfs.forEach((pdf, index) => {
-        formDataToSend.append(`pdf_${index}`, pdf.file);
-      });
-        // Adicionar dados de escolas/quantidades (independente do método)
-      formDataToSend.append('escolasQuantidades', JSON.stringify(formDataJson.escolasQuantidades));
-      
-      console.log("FormData (chaves):", [...formDataToSend.keys()]);
+        origemDados: formData.metodoPedido,
+        escolasQuantidades: formData.escolasQuantidades,
+        pdfs: formData.pdfs // Incluir os PDFs na validação
+      };
 
-      // Armazenar dados para mostrar no modal
-      setApiData(formDataJson);
-      setShowDataModal(true);
+      // Preparar arquivos PDF - usar a estrutura correta
+      const pdfFiles = formData.pdfs.map(pdf => ({
+        nome: pdf.name || pdf.file.name,
+        tamanho: pdf.size || pdf.file.size,
+        tipo: pdf.file.type,
+        file: pdf.file
+      }));
 
-      // Mostrar notificação
-      setNotification({
-        message: 'Visualizando dados que seriam enviados à API',
-        type: 'info'
-      });
+      console.log('Dados preparados para envio:', formDataToSubmit);
+      console.log('Arquivos PDF preparados:', pdfFiles);
+
+      // Usar o hook para loading com progresso
+      const result = await withProgressLoading(
+        async (onProgress) => {
+          return await submitFormulario(
+            formDataToSubmit, 
+            pdfFiles,
+            onProgress,
+            updateMessage
+          );
+        },
+        'Enviando formulário ZeroHum...',
+        'Processando dados e arquivos PDF - não feche esta página'
+      );
+
+      if (result.success) {
+        setSubmissionResult(result);
+        setShowSuccessModal(true);
+        setNotification({
+          message: 'Formulário enviado com sucesso!',
+          type: 'success'
+        });
+      } else {
+        setNotification({
+          message: result.message || 'Erro ao enviar formulário',
+          type: 'error'
+        });
+      }
+
     } catch (error) {
-      console.error('Erro ao processar dados:', error);
+      console.error('Erro ao enviar formulário:', error);
       setNotification({
-        message: `Erro ao processar dados: ${error.message}`,
+        message: `Erro ao enviar formulário: ${error.message}`,
         type: 'error'
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -180,14 +187,14 @@ function ZeroHum() {
             onNext={handleNext} 
             onBack={handleBack}
           />
-        );
-      case 6:
+        );      case 6:
         return (
           <DadosContato 
             formData={formData} 
             updateFormData={updateFormData} 
             onBack={handleBack}
             onSubmit={handleSubmit}
+            loading={isLoading}
           />
         );
       default:
@@ -211,82 +218,78 @@ function ZeroHum() {
         
         <ProgressBar currentStep={step} steps={steps} />
       </div>
-      
-      <div className="bg-app-card p-6 rounded-xl shadow-lg border border-app-border">
+        <div className="bg-app-card p-6 rounded-xl shadow-lg border border-app-border">
         {renderStep()}
       </div>
 
-      {/* Modal para visualização dos dados da API */}
-      {showDataModal && (
+      {/* Loading Overlay - Sistema Bloqueante Completo */}
+      <LoadingOverlay 
+        isLoading={isLoading}
+        message={loadingMessage}
+        submessage={loadingSubmessage}
+        showProgress={showProgress}
+        progress={progress}
+      />{/* Modal de sucesso */}
+      {showSuccessModal && submissionResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-app-card rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-auto">
-            <h2 className="text-2xl font-bold text-app-primary mb-4">Dados que seriam enviados para a API</h2>
-            
-            <div className="mb-4">
-              <h3 className="font-semibold text-white mb-2">Método de envio:</h3>
-              <p className="text-gray-300">FormData (multipart/form-data) - necessário para envio de arquivos</p>
-            </div>
-              <div className="mb-4">
-              <h3 className="font-semibold text-white mb-2">Estrutura dos dados:</h3>
-              <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm text-gray-300 max-h-96">
-                {JSON.stringify(apiData, null, 2)}
-              </pre>
-            </div>
-            
-            {/* Seção para mostrar as escolas e quantidades */}
-            {apiData?.escolasQuantidades && Object.keys(apiData.escolasQuantidades).length > 0 && (
-              <div className="mb-4">
-                <h3 className="font-semibold text-white mb-2">Escolas e Quantidades:</h3>
-                <div className="bg-gray-900 p-4 rounded-lg overflow-x-auto">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {Object.entries(apiData.escolasQuantidades).map(([escola, quantidade]) => (
-                      <div key={escola} className="flex justify-between p-2 border border-gray-700 rounded-md">
-                        <span className="text-gray-300">{escola.replace(/_/g, ' ')}</span>
-                        <span className="text-green-400 font-medium">{quantidade}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 pt-2 border-t border-gray-700 flex justify-between">
-                    <span className="text-white">Total:</span>
-                    <span className="text-green-400 font-bold">
-                      {Object.values(apiData.escolasQuantidades).reduce((a, b) => a + b, 0)} cópias
-                    </span>
-                  </div>
-                </div>
+          <div className="bg-app-card rounded-lg p-6 max-w-md w-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-            )}            <div className="mb-6">
-              <h3 className="font-semibold text-white mb-2">Observações:</h3>
-              <ul className="list-disc text-gray-300 pl-5 space-y-1">
-                <li>Os arquivos PDFs são enviados como arquivos binários no FormData</li>
-                <li>As informações das escolas e quantidades são enviadas como JSON (string) no FormData</li>
-                <li>O sistema utiliza o mesmo formato de dados independente do método de entrada (manual ou Excel)</li>
-                {apiData?.metodoPedido === 'excel' && (
-                  <li className="text-green-400">
-                    Os dados foram extraídos de um arquivo Excel e processados no formato padrão
-                  </li>
-                )}
-                <li>Apenas os dados necessários são enviados à API, sem incluir metadados do arquivo Excel</li>
-                <li>No backend, será necessário processar os dados de escolas/quantidades a partir do JSON</li>
-              </ul>
-            </div>
-            
-            <div className="flex justify-between">
-              <button 
-                onClick={() => setShowDataModal(false)}
-                className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Fechar
-              </button>
               
-              <button 
-                onClick={() => {
-                  setShowDataModal(false);
-                  navigate('/formularios');
-                }}
-                className="px-4 py-2 bg-[var(--color-primary)] text-black font-medium rounded-lg hover:bg-[var(--color-primary)]/90 transition-colors"
-              >
-                Voltar para formulários
-              </button>
+              <h2 className="text-2xl font-bold text-green-500 mb-2">Sucesso!</h2>
+              <p className="text-gray-300 mb-6">
+                Seu formulário foi enviado com sucesso. Você receberá um e-mail de confirmação em breve.
+              </p>
+              
+              {submissionResult.data && (
+                <div className="bg-gray-900 p-4 rounded-lg mb-6">
+                  <p className="text-sm text-gray-400 mb-2">ID do pedido:</p>
+                  <p className="text-green-400 font-mono">{submissionResult.data.id || 'Processando...'}</p>
+                </div>
+              )}
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button 
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    // Reset do formulário
+                    setFormData({
+                      metodoPedido: '',
+                      pdfs: [],
+                      titulo: '',
+                      dataEntrega: '',
+                      observacoes: '',
+                      formatoFinal: 'A4',
+                      corImpressao: 'Preto e Branco',
+                      impressao: 'Só Frente',
+                      gramatura: '75g',
+                      grampos: '0',
+                      escolasQuantidades: {},
+                      arquivoExcel: null,
+                      nome: user?.username || '',
+                      email: user?.email || ''
+                    });
+                    setStep(1);
+                  }}
+                  className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Novo Formulário
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    navigate('/formularios');
+                  }}
+                  className="px-4 py-2 bg-[var(--color-primary)] text-black font-medium rounded-lg hover:bg-[var(--color-primary)]/90 transition-colors"
+                >
+                  Ver Formulários
+                </button>
+              </div>
             </div>
           </div>
         </div>
