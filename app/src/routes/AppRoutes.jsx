@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react'
 import SignIn from '../pages/sigin'
 import Home from '../pages/Home'
 import Formularios from '../pages/Formularios'
+import Montink from '../pages/Montink'
 import MainLayout from '../components/MainLayout'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { useAuth } from '../contexts/AuthContext'
@@ -68,14 +69,8 @@ function AppRoutes() {
                 </div>
               } />
             </Route>
-            
-            <Route element={<ProtectedRoute requiredPermissions={['montik']} />}>
-              <Route path="/montik" element={
-                <div className="p-4 bg-app-card rounded-lg shadow-lg border border-app-border">
-                  <h1 className="text-2xl font-bold text-app-primary">Montik</h1>
-                  <p className="text-gray-400">Esta página está em construção.</p>
-                </div>
-              } />
+              <Route element={<ProtectedRoute requiredPermissions={['montik']} />}>
+              <Route path="/montik" element={<Montink />} />
             </Route>
             
             <Route element={<ProtectedRoute requiredPermissions={['all']} />}>
