@@ -7,13 +7,27 @@ import React, { useState } from 'react';
  * @param {Function} props.onFilter - Callback para aplicar filtros
  * @param {Array} props.statusOptions - Opções de status disponíveis
  */
-function FilterPanel({ onFilter, statusOptions = [] }) {  const [filters, setFilters] = useState({
+function FilterPanel({ onFilter, statusOptions = [] }) {
+  const [filters, setFilters] = useState({
     status: '',
     sku: '',
     dataEmissao: '',
     numeroPedido: ''
   });
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Componente de ícone SVG minimalista
+  const Icon = ({ type, className = "w-5 h-5" }) => {
+    const icons = {
+      search: (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+      )
+    };
+    
+    return icons[type] || icons.search;
+  };
 
   const handleInputChange = (field, value) => {
     setFilters(prev => ({
@@ -39,15 +53,14 @@ function FilterPanel({ onFilter, statusOptions = [] }) {  const [filters, setFil
   // Verifica se há filtros ativos
   const hasActiveFilters = Object.values(filters).some(value => value !== '');
   return (
-    <div className={`bg-app-card border border-app-border rounded-lg overflow-hidden transition-shadow duration-300 ${isExpanded ? 'shadow-lg shadow-black/20' : ''}`}>
-      {/* Barra do dropdown - sempre visível */}
+    <div className={`bg-app-card border border-app-border rounded-lg overflow-hidden transition-shadow duration-300 ${isExpanded ? 'shadow-lg shadow-black/20' : ''}`}>      {/* Barra do dropdown - sempre visível */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-800 transition-all duration-200 group"
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-800 transition-all duration-300 group"
       >
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg transition-transform duration-200 group-hover:scale-110">🔍</span>
+            <Icon type="search" className="w-6 h-6 text-app-primary group-hover:scale-110 transition-transform duration-300" />
             <h3 className="text-lg font-semibold text-app-primary">
               Filtrar Pedidos
             </h3>
@@ -153,12 +166,11 @@ function FilterPanel({ onFilter, statusOptions = [] }) {  const [filters, setFil
                 className="w-full p-2 bg-app-dark border border-app-border rounded-lg text-white placeholder-gray-500 focus:border-app-primary focus:outline-none"
               />
             </div>
-          </div>
-            {/* Botões de ação */}
+          </div>            {/* Botões de ação */}
           <div className="flex flex-wrap gap-3 justify-end pt-4 border-t border-app-border/50">
             <button
               onClick={handleClearFilters}
-              className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-all duration-200 text-sm border border-gray-600 hover:border-gray-500"
+              className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500"
             >
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +182,7 @@ function FilterPanel({ onFilter, statusOptions = [] }) {  const [filters, setFil
             
             <button
               onClick={handleFilter}
-              className="px-6 py-2 bg-app-primary text-black font-medium rounded-lg hover:bg-opacity-90 transition-all duration-200 text-sm shadow-lg"
+              className="px-6 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-500 transition-all duration-300 text-sm border border-gray-500 hover:border-gray-400"
             >
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
