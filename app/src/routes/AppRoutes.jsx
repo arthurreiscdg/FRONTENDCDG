@@ -55,7 +55,8 @@ function AppRoutes() {
             {/* Rotas acessíveis a todos os usuários autenticados */}
             <Route path="/home" element={<Home />} />
             
-            {/* Rotas que exigem permissão específica */}            <Route element={<ProtectedRoute requiredPermissions={['formularios']} />}>
+            {/* Rotas que exigem permissão específica */}           
+              <Route element={<ProtectedRoute requiredPermissions={['formularios']} />}>
               <Route path="/formularios" element={<Formularios />} />
               <Route path="/formularios/zerohum" element={
                 <Suspense fallback={<LoadingScreen />}>

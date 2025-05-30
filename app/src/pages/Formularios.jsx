@@ -9,29 +9,36 @@ const formularioData = [
     id: 'coleguium',
     title: 'Coleguium',
     description: 'Formulário específico para o sistema Coleguium, com campos personalizados para esta instituição.',
-    icon: '🏫',
+    iconType: 'user',
     path: '/formularios/coleguium'
   },
   {
     id: 'elite',
     title: 'Elite',
     description: 'Formulário Elite com campos avançados e opções adicionais para processamento prioritário.',
-    icon: '⭐',
+    iconType: 'chart',
     path: '/formularios/elite'
   },
   {
     id: 'zerohum',
     title: 'ZeroHum',
     description: 'Formulário ZeroHum otimizado para velocidade e eficiência no processamento de dados.',
-    icon: '🚀',
+    iconType: 'settings',
     path: '/formularios/zerohum'
   },
   {
     id: 'pensi',
     title: 'Pensi',
     description: 'Formulário Pensi com recursos especiais para análise e visualização de dados.',
-    icon: '📊',
+    iconType: 'document',
     path: '/formularios/pensi'
+  },
+  {
+    id: 'apogeu',
+    title: 'Apogeu',
+    description: 'Formulário Apogeu com interface moderna e funcionalidades integradas.',
+    iconType: 'home',
+    path: '/formularios/apogeu'
   }
 ];
 
@@ -98,8 +105,7 @@ function Formularios() {
           notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}
         >
           {notification.message}
-        </div>
-      )}
+        </div>      )}
         <div className="mb-8">
         <h1 className="text-3xl font-bold text-app-primary mb-2">Formulários</h1>
         <p className="text-gray-400">
@@ -107,13 +113,13 @@ function Formularios() {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {availableForms.map((form) => (
           <FormCard
             key={form.id}
             title={form.title}
             description={form.description}
-            icon={form.icon}
+            iconType={form.iconType}
             path={form.path}
             onSelect={handleSelectForm}
           />

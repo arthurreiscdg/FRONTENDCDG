@@ -60,21 +60,20 @@ function DashboardCard({ title, description, iconType, path }) {
     
     return icons[type] || icons.document;
   };
-
   return (
     <Link 
       to={path} 
-      className="bg-app-card p-6 rounded-xl border border-app-border hover:border-app-primary/30 group block transition-all duration-200 hover:bg-app-card/80"
+      className="bg-app-card p-6 rounded-xl border border-app-border hover:border-app-primary/50 group block transition-all duration-300 hover:bg-app-card/90 hover:scale-[1.02] hover:shadow-lg hover:shadow-app-primary/10"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-app-primary transition-colors">
+          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-app-primary transition-colors duration-300">
             {title}
           </h3>
-          <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">
+          <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors duration-300">
             {description}
           </p>
-        </div>        <div className="ml-4 p-3 rounded-lg bg-app-primary/10 text-app-primary group-hover:bg-app-primary/20 transition-all">
+        </div>        <div className="ml-4 p-3 rounded-lg bg-app-primary/10 text-app-primary group-hover:bg-app-primary/30 group-hover:scale-110 transition-all duration-300">
           <Icon type={iconType} className="w-8 h-8" />
         </div>
       </div>
