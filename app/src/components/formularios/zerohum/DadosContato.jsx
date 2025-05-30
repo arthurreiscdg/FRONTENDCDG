@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import InfoOrigem from './InfoOrigem';
+import { formatarDataBrasileira } from '../../../utils/dateValidation';
 
 function DadosContato({ formData, updateFormData, onBack, onSubmit, loading }) {
   const [errors, setErrors] = useState({
@@ -140,10 +141,9 @@ function DadosContato({ formData, updateFormData, onBack, onSubmit, loading }) {
           <div className="flex justify-between">
             <span className="text-gray-400">Material:</span>
             <span className="text-white">{formData.titulo}</span>
-          </div>
-          <div className="flex justify-between">
+          </div>          <div className="flex justify-between">
             <span className="text-gray-400">Data de Entrega:</span>
-            <span className="text-white">{new Date(formData.dataEntrega).toLocaleDateString('pt-BR')}</span>
+            <span className="text-white">{formatarDataBrasileira(formData.dataEntrega)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Escolas:</span>

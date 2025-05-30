@@ -240,3 +240,22 @@ export function obterDatasSugeridas() {
   
   return sugestoes;
 }
+
+/**
+ * Formata uma data no formato YYYY-MM-DD para DD/MM/YYYY sem problemas de timezone
+ * @param {string} dateString - Data no formato YYYY-MM-DD
+ * @returns {string} Data formatada no formato DD/MM/YYYY
+ */
+export function formatarDataBrasileira(dateString) {
+  if (!dateString) return '';
+  
+  // Parse da string YYYY-MM-DD diretamente sem usar new Date()
+  // para evitar problemas de timezone
+  const [year, month, day] = dateString.split('-');
+  
+  // Validar se os valores são válidos
+  if (!year || !month || !day) return '';
+  
+  // Formatar como DD/MM/YYYY
+  return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+}
