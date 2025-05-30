@@ -264,17 +264,21 @@ function Montink() {
               </button>
             </div>
           </div>
-        )}
-
-        {/* Layout principal */}
-        <div className="flex gap-6">
-          {/* Painel de ações (esquerda) */}
-          <div className="flex-shrink-0">
+        )}        {/* Filtro horizontal no topo */}
+        <div className="mb-6">
+          <FilterPanel
+            onFilter={handleFilter}
+            statusOptions={statusOptions}
+          />
+        </div>        {/* Layout inferior - Ações e Pedidos */}
+        <div className="flex flex-col lg:flex-row gap-4 min-w-0">
+          {/* Painel de ações */}
+          <div className="lg:w-64 xl:w-72 flex-shrink-0">
             <ActionsPanel />
           </div>
 
           {/* Área central - Lista de pedidos */}
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 min-w-0 space-y-4">
             {/* Barra de ações para pedidos selecionados */}
             <OrderActionsBar
               selectedOrders={selectedOrders}
@@ -340,16 +344,7 @@ function Montink() {
                   Próxima
                 </button>
               </div>
-            )}
-          </div>
-
-          {/* Painel de filtros (direita) */}
-          <div className="flex-shrink-0">
-            <FilterPanel
-              onFilter={handleFilter}
-              statusOptions={statusOptions}
-            />
-          </div>
+            )}          </div>
         </div>
 
         {/* Modais */}

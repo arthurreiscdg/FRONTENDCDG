@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Sidebar from './Sidebar';
+import AppHeader from './header/AppHeader';
 import { useAuth } from '../contexts/AuthContext';
 
 function MainLayout() {
@@ -30,27 +31,8 @@ function MainLayout() {
   };
   return (
     <div className="flex h-screen bg-app-dark">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">        <header className="bg-app-card text-white p-4 flex items-center justify-between border-b border-app-border">
-          <h1 className="text-2xl font-bold text-app-primary">CDG System</h1>
-          <div className="flex items-center space-x-4">
-            {user && (
-              <div className="flex items-center">
-                <div className="bg-app-dark p-1 rounded-md border border-app-border mr-2">
-                  <span className="text-xs text-gray-400">Perfil:</span>
-                  <span className="ml-1 text-sm font-medium text-app-primary capitalize">{user.role}</span>
-                </div>
-                <span className="text-gray-300 font-medium">{user.username}</span>
-              </div>
-            )}
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 rounded-lg bg-red-900 hover:bg-red-800 text-white transition-colors"
-            >
-              Sair
-            </button>
-          </div>
-        </header>
+      <Sidebar />      <div className="flex flex-col flex-1 overflow-hidden">
+        <AppHeader user={user} onLogout={handleLogout} />
         <main className="flex-1 p-6 overflow-y-auto bg-app-dark">
           <Outlet />
         </main>

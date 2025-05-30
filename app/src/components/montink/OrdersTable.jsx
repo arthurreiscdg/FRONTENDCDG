@@ -131,9 +131,8 @@ function OrdersTable({
                     checked={isSelected(order.id)}
                     onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
                     className="rounded border-app-border bg-app-dark focus:ring-app-primary text-app-primary"
-                  />
-                  <div>
-                    <div className="text-white font-medium text-sm">#{order.numero_pedido || order.id}</div>
+                  />                  <div>
+                    <div className="text-white font-medium text-sm">{order.numero_pedido || order.id}</div>
                     <div className="text-gray-400 text-xs">{order.sku || 'Sem SKU'}</div>
                   </div>
                 </div>
@@ -145,13 +144,7 @@ function OrdersTable({
                     {order.status?.nome || 'Pendente'}
                   </span>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs mb-3">
-                <div>
-                  <span className="text-gray-400">Cliente:</span>
-                  <div className="text-white font-medium truncate">{order.nome_cliente || '-'}</div>
-                </div>
+              </div>              <div className="grid grid-cols-2 gap-3 text-xs mb-3">
                 <div>
                   <span className="text-gray-400">Valor:</span>
                   <div className="text-white font-medium">{formatCurrency(order.valor_pedido)}</div>
@@ -167,11 +160,13 @@ function OrdersTable({
                     <span>{getMetodoEnvio(order.metodo_envio).nome}</span>
                   </div>
                 </div>
-              </div>
-
-              <button
+                <div>
+                  <span className="text-gray-400">Produto:</span>
+                  <div className="text-white font-medium truncate">{order.nome_produto || '-'}</div>
+                </div>
+              </div>              <button
                 onClick={() => onViewDetails(order)}
-                className="w-full px-3 py-2 bg-app-primary text-black text-sm font-medium rounded hover:bg-opacity-90 transition-colors"
+                className="w-full px-3 py-2 bg-white text-black text-sm font-medium rounded hover:bg-gray-200 transition-colors"
               >
                 Ver detalhes
               </button>
@@ -196,21 +191,19 @@ function OrdersTable({
                   onChange={(e) => handleSelectAll(e.target.checked)}
                   className="rounded border-app-border bg-app-dark focus:ring-app-primary text-app-primary"
                 />
-              </th>
-              <th className="p-2 text-left text-gray-300 font-medium">Nº</th>
+              </th>              <th className="p-2 text-left text-gray-300 font-medium">Nº</th>
               <th className="p-2 text-left text-gray-300 font-medium">SKU</th>
               <th className="p-2 text-left text-gray-300 font-medium">Data</th>
               <th className="p-2 text-left text-gray-300 font-medium">Envio</th>
-              <th className="p-2 text-left text-gray-300 font-medium">Status</th>
               <th className="p-2 text-left text-gray-300 font-medium">Valor</th>
-              <th className="p-2 text-left text-gray-300 font-medium">Cliente</th>
+              <th className="p-2 text-left text-gray-300 font-medium">Produto</th>
+              <th className="p-2 text-left text-gray-300 font-medium">Status</th>
               <th className="p-2 text-left text-gray-300 font-medium w-20">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {orders.length === 0 ? (
-              <tr>
-                <td colSpan="9" className="p-8 text-center text-gray-400">
+            {orders.length === 0 ? (              <tr>
+                <td colSpan="8" className="p-8 text-center text-gray-400">
                   <div className="flex flex-col items-center space-y-2">
                     <span className="text-2xl">📦</span>
                     <span>Nenhum pedido encontrado</span>
@@ -232,9 +225,8 @@ function OrdersTable({
                       onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
                       className="rounded border-app-border bg-app-dark focus:ring-app-primary text-app-primary"
                     />
-                  </td>
-                  <td className="p-2 text-white font-medium">
-                    #{order.numero_pedido || order.id}
+                  </td>                  <td className="p-2 text-white font-medium">
+                    {order.numero_pedido || order.id}
                   </td>
                   <td className="p-2 text-gray-300 max-w-20 truncate" title={order.sku}>
                     {order.sku || '-'}
@@ -248,6 +240,12 @@ function OrdersTable({
                       <span className="hidden lg:inline">{getMetodoEnvio(order.metodo_envio).nome}</span>
                     </div>
                   </td>
+                  <td className="p-2 text-gray-300 font-medium">
+                    {formatCurrency(order.valor_pedido)}
+                  </td>
+                  <td className="p-2 text-gray-300 max-w-32 truncate" title={order.nome_produto}>
+                    {order.nome_produto || '-'}
+                  </td>
                   <td className="p-2">
                     <span 
                       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white whitespace-nowrap"
@@ -255,17 +253,10 @@ function OrdersTable({
                     >
                       {order.status?.nome || 'Pendente'}
                     </span>
-                  </td>
-                  <td className="p-2 text-gray-300 font-medium">
-                    {formatCurrency(order.valor_pedido)}
-                  </td>
-                  <td className="p-2 text-gray-300 max-w-32 truncate" title={order.nome_cliente}>
-                    {order.nome_cliente || '-'}
-                  </td>
-                  <td className="p-2">
+                  </td>                  <td className="p-2">
                     <button
                       onClick={() => onViewDetails(order)}
-                      className="px-2 py-1 bg-app-primary text-black text-xs font-medium rounded hover:bg-opacity-90 transition-colors whitespace-nowrap"
+                      className="px-2 py-1 bg-white text-black text-xs font-medium rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
                     >
                       Ver mais
                     </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MapComponent from './MapComponent';
 
 /**
  * Modal para visualização de detalhes do pedido
@@ -74,11 +75,10 @@ function OrderDetailsModal({ order, isOpen, onClose, onChangeStatus, statusOptio
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-6">            <div className="space-y-4">
               <div>
                 <label className="text-sm text-gray-400">ID do Pedido</label>
-                <p className="text-white font-medium">#{order.numero_pedido || order.id}</p>
+                <p className="text-white font-medium">{order.numero_pedido || order.id}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-400">Data do Pedido</label>
@@ -158,12 +158,16 @@ function OrderDetailsModal({ order, isOpen, onClose, onChangeStatus, statusOptio
                   <p className="text-gray-300">Tel: {order.telefone_destinatario}</p>
                 )}
               </div>
-            </div>
-            <div>
+            </div>            <div>
               <h4 className="text-white font-medium mb-4">Mapa</h4>
-              <div className="bg-app-dark p-4 rounded-lg border border-app-border h-64 flex items-center justify-center">
-                <p className="text-gray-400">Mapa será implementado com API externa</p>
-              </div>
+              <MapComponent
+                endereco={order.endereco}
+                numero={order.numero}
+                bairro={order.bairro}
+                cidade={order.cidade}
+                uf={order.uf}
+                cep={order.cep}
+              />
             </div>
           </div>
         );
@@ -221,9 +225,8 @@ function OrderDetailsModal({ order, isOpen, onClose, onChangeStatus, statusOptio
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-app-card border border-app-border rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-app-border">
-          <h2 className="text-xl font-bold text-app-primary">
-            Detalhes do Pedido #{order.numero_pedido || order.id}
+        <div className="flex justify-between items-center p-6 border-b border-app-border">          <h2 className="text-xl font-bold text-app-primary">
+            Detalhes do Pedido {order.numero_pedido || order.id}
           </h2>
           <button
             onClick={onClose}
