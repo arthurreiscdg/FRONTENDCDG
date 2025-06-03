@@ -1,0 +1,51 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@casadagrafica.com",
+      "password": "admin123",
+      "role": "admin",
+      "permissions": ["all"]
+    },
+    {
+      "id": 2,
+      "username": "montik",
+      "email": "montik@casadagrafica.com",
+      "password": "montik123",
+      "role": "montik",
+      "permissions": ["formularios", "montik", "config-montik"]
+    },    {
+      "id": 3,
+      "username": "zerohum",
+      "email": "zerohum@casadagrafica.com",
+      "password": "zerohum123",
+      "role": "zerohum",
+      "permissions": ["formularios", "zerohum"]
+    },
+    {
+      "id": 4,
+      "username": "coleguium",
+      "email": "coleguium@casadagrafica.com",
+      "password": "coleguium123",
+      "role": "coleguium",
+      "permissions": ["formularios", "coleguium"]
+    },
+    {
+      "id": 5,
+      "username": "elite",
+      "email": "elite@casadagrafica.com",
+      "password": "elite123",
+      "role": "elite",
+      "permissions": ["formularios", "elite"] 
+    },
+    {
+      "id": 6,
+      "username": "pensi",
+      "email": "pensi@casadagrafica.com",
+      "password": "pensi123",
+      "role": "pensi",
+      "permissions": ["formularios", "pensi"]
+    }
+  ]
+}
