@@ -26,7 +26,7 @@ const AppHeader = ({ user, onLogout }) => {
               text-app-primary
               tracking-tight
             ">
-              CDG SYSTEM
+              PAGE FLOW
             </h1>
             <p className="text-xs text-gray-400 font-medium opacity-70">
               Casa da Gráfica

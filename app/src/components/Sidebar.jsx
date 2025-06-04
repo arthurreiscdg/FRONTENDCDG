@@ -133,7 +133,7 @@ function Sidebar() {
               transitionDelay: isOpen ? '150ms' : '0ms' 
             }}
           >
-            <h2 className="text-lg font-bold text-app-primary tracking-wide whitespace-nowrap">CDG SYSTEM</h2>
+            <h2 className="text-lg font-bold text-app-primary tracking-wide whitespace-nowrap">PAGE FLOW</h2>
             <p className="text-xs text-gray-400 font-medium whitespace-nowrap">Management Portal</p>
           </div>
         </div>

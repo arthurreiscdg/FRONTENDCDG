@@ -18,7 +18,7 @@ function LoadingScreen() {
       <div className="max-w-md w-full mx-auto">
         <div className="bg-app-card rounded-2xl p-8 shadow-2xl border border-app-border flex flex-col items-center">
           <img src="/cdg_logo.svg" alt="CDG Logo" className="h-24 mb-4 filter drop-shadow-lg" />
-          <h1 className="text-4xl font-bold text-app-primary mb-2">CDG SYSTEM</h1>          <div className="mt-8 flex items-center justify-center">
+          <h1 className="text-4xl font-bold text-app-primary mb-2">PAGE FLOW</h1>          <div className="mt-8 flex items-center justify-center">
             <div className="animate-spin rounded-md h-12 w-12 border-t-2 border-b-2 border-[var(--color-primary)]"></div>
           </div>
           <p className="text-gray-400 mt-4">Carregando sistema...</p>

@@ -6,7 +6,7 @@ function Home() {
   return (
     <div className="space-y-8">
       <div className="bg-app-card p-8 rounded-xl border border-app-border">
-        <h1 className="text-3xl font-bold text-app-primary mb-2">Bem-vindo ao CDG System</h1>
+        <h1 className="text-3xl font-bold text-app-primary mb-2">Bem-vindo ao PAGE FLOW</h1>
         <p className="text-gray-400">
           Sistema de gerenciamento para Casa da Gráfica
         </p>

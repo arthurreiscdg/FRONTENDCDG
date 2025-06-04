@@ -64,7 +64,7 @@ function SignIn() {
               />
             </div>
             <h1 className="text-4xl font-bold text-app-primary mb-2">
-              CDG SYSTEM
+              PAGE FLOW
             </h1>
             <p className="text-gray-400 mb-6">
               Entre com suas credenciais para acessar o sistema
