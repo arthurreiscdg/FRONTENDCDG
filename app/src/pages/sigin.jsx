@@ -2,65 +2,67 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
-function SignIn() {
-  const [formData, setFormData] = useState({
+function SignIn() {  const [formData, setFormData] = useState({
     username: '',
     password: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const { login, authenticated } = useAuth()
-    // Redirecionar para home ou formulário específico se já estiver autenticado
-  const { getDirectFormPath } = useAuth()
-  
-  useEffect(() => {
+  const navigate = useNavigate();
+  const { login, authenticated, getDirectFormPath } = useAuth()
+    useEffect(() => {
     if (authenticated) {
       const directPath = getDirectFormPath()
       if (directPath) {
         navigate(directPath)
       } else {
         navigate('/home')
-      }
-    }
-  }, [authenticated, navigate, getDirectFormPath])
-
+      }    }
+  }, [authenticated, navigate, getDirectFormPath]);
+  
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     })
   }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    if (error) {
+      setError('')
+    }
     setLoading(true)
     
     try {
       const result = await login(formData.username, formData.password)
-        if (result.success) {
+      
+      if (result && result.success === false) {
+        const errorMessage = result.message || 'Usuário ou senha inválidos';
+        setError(errorMessage);
+        setLoading(false);
+      } else if (result && result.success === true) {
         // O redirecionamento acontecerá automaticamente pelo useEffect
-        // que monitora o estado de autenticação e direciona para o formulário específico
       } else {
-        setError(result.message || 'Usuário ou senha inválidos')
+        setError('Resposta inesperada do servidor');
+        setLoading(false);
       }
     } catch (err) {
       console.error('Erro ao fazer login:', err)
       setError('Ocorreu um erro ao tentar fazer login')
-    } finally {
       setLoading(false)
-    }
-  }
+    }  }
+  
   return (
     <div className="min-h-screen bg-app-dark flex items-center justify-center p-4">
       <div className="max-w-md w-full mx-auto">
-        <div className="bg-app-card rounded-2xl p-8 shadow-2xl border border-app-border">
+        <div className="bg-app-card rounded-2xl p-8 border border-app-border backdrop-blur-sm professional-card-shadow">
           <div className="flex flex-col items-center mb-6">
             <div className="h-24 mb-4 flex items-center justify-center">
               <img 
                 src="/cdg_logo.svg" 
                 alt="CDG Logo" 
-                className="h-full filter drop-shadow-lg"
+                className="h-full filter neon-logo-glow animate-pulse-slow"
               />
             </div>
             <h1 className="text-4xl font-bold text-app-primary mb-2">
@@ -100,8 +102,7 @@ function SignIn() {
                 placeholder="Digite sua senha"
                 required
               /></div>
-            
-            {error && (
+              {error && (
               <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-100 text-sm">
                 {error}
               </div>
@@ -118,8 +119,7 @@ function SignIn() {
                   <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
                   Entrando...
                 </div>
-              ) : 'Entrar'}
-            </button>
+              ) : 'Entrar'}            </button>
           </form>
         </div>
       </div>

@@ -65,16 +65,12 @@ export function AuthProvider({ children }) {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
-  
-  /**
+    /**
    * Função de login
    * @param {string} username 
    * @param {string} password 
    * @returns {Promise<Object>}
-   */
-  const login = async (username, password) => {
-    setLoading(true);
-    
+   */  const login = async (username, password) => {
     try {
       const result = await authLogin(username, password);
       
@@ -84,8 +80,12 @@ export function AuthProvider({ children }) {
       }
       
       return result;
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Erro no login (AuthContext):', error);
+      return { 
+        success: false, 
+        message: 'Erro interno no login' 
+      };
     }
   };
     /**

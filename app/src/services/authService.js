@@ -46,7 +46,8 @@ export function getDirectFormPath(user) {
  * @returns {Promise<Object>} Dados do usuário e token
  */
 export async function login(username, password) {
-  try {    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,7 +59,10 @@ export async function login(username, password) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.mensagem || 'Erro no login');
+      return {
+        success: false,
+        message: data.message || data.mensagem || 'Erro no login'
+      };
     }
 
     if (data.success && data.token && data.usuario) {
@@ -74,7 +78,9 @@ export async function login(username, password) {
         escola_id: data.usuario.escola_id,
         permissions: generatePermissions(data.usuario),
         directFormPath: getDirectFormPath(data.usuario)
-      };      // Salva apenas dados do usuário no localStorage (token fica no cookie HTTPOnly)
+      };
+
+      // Salva apenas dados do usuário no localStorage (token fica no cookie HTTPOnly)
       localStorage.setItem(USER_INFO_KEY, JSON.stringify(adaptedUser));
       
       return {
@@ -84,10 +90,17 @@ export async function login(username, password) {
       };
     }
 
-    throw new Error('Resposta inválida do servidor');
+    // Se chegou aqui, é porque success é false ou dados incompletos
+    return {
+      success: false,
+      message: data.message || 'Resposta inválida do servidor'
+    };
   } catch (error) {
     console.error('Erro no login:', error);
-    return { success: false, message: error.message };
+    return { 
+      success: false, 
+      message: error.message || 'Erro de conexão com o servidor' 
+    };
   }
 }
 
